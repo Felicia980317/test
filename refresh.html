@@ -1,45 +1,87 @@
 <!doctype html>
 <html lang="zh-Hant">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Auto-Refresh Notion Embed</title>
-  <style>
-    html, body { height: 100%; margin: 0; }
-    #wrap { position: fixed; inset: 0; }
-    iframe { width: 100%; height: 100%; border: 0; }
-  </style>
-</head>
-<body>
-  <div id="wrap">
-    <iframe id="notionFrame" src="" allow="fullscreen"></iframe>
-  </div>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>策略看板</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, "Segoe UI", -apple-system; margin: 24px; }
+  table { border-collapse: collapse; width: 100%; max-width: 1200px; }
+  th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: center; }
+  th { background: #f6f8fa; }
+  #status { margin: 10px 0; display: inline-block; padding: 4px 8px; border-radius: 6px; background: #ffe6e6; }
+  #status.ok { background: #e6ffed; }
+</style>
 
-  <script>
-    // === 設定區 ===
-    const notionUrl = "https://twilight-production-37f.notion.site/New-Page-2680a90690d88014b386cf3408c5a425?source=copy_link"; // ← 換成你的 Notion 公開連結
-    const intervalMs = 5000; // 每隔多少毫秒重載一次 (預設 60 秒)
-    // ==============
+<h1>策略看板（單筆資料）</h1>
+<div id="status">初始化</div>
 
-    const frame = document.getElementById("notionFrame");
+<table>
+  <thead>
+    <tr>
+      <th>名稱</th><th>更新時間</th><th>策略</th><th>標的</th>
+      <th>近一周%</th><th>近一月%</th><th>近一季%</th><th>近半年%</th><th>近一年%</th>
+      <th>MDD%</th><th>Sharpe</th>
+    </tr>
+  </thead>
+  <tbody id="tb"><tr><td colspan="11">載入中...</td></tr></tbody>
+</table>
 
-    function load() {
-      const t = Date.now();
-      const url = notionUrl + (notionUrl.includes("?") ? "&" : "?") + "t=" + t;
-      frame.src = url;
+<script>
+  // ➊ 換成你的 Upstash 只讀 REST URL 與 Token
+  const REST_URL = "https://guided-spider-19708.upstash.io";       // 例: https://us1-xxx.upstash.io
+  const READ_TOKEN = "Akz8AAIgcDE18SAeYebRfjHOi1t_RtbOFNv2r3NHF0kLYfDIUMnEOw";        // 只讀 Token
+  const KEY = "board:row0";
+  const INTERVAL_MS = 10000;                       // 10秒；改 60000 = 1 分鐘
+
+  const tb = document.getElementById('tb');
+  const statusEl = document.getElementById('status');
+
+  function fmtPct(x) {
+    if (x === null || x === undefined || isNaN(Number(x))) return "-";
+    return (Number(x).toFixed(2)) + "%";
+  }
+  function setStatus(ok, text) {
+    statusEl.className = ok ? 'ok' : '';
+    statusEl.textContent = text;
+  }
+  function render(row) {
+    const html = `
+      <tr>
+        <td>${row["名稱"] ?? "-"}</td>
+        <td>${row["更新時間"] ?? "-"}</td>
+        <td>${row["策略"] ?? "-"}</td>
+        <td>${row["標的"] ?? "-"}</td>
+        <td>${fmtPct(row["近一周%"])}</td>
+        <td>${fmtPct(row["近一月%"])}</td>
+        <td>${fmtPct(row["近一季%"])}</td>
+        <td>${fmtPct(row["近半年%"])}</td>
+        <td>${fmtPct(row["近一年%"])}</td>
+        <td>${fmtPct(row["MDD%"])}</td>
+        <td>${(row["Sharpe"] ?? "-")}</td>
+      </tr>`;
+    tb.innerHTML = html;
+  }
+
+  async function pull() {
+    try {
+      const res = await fetch(`${REST_URL}/get/${encodeURIComponent(KEY)}`, {
+        headers: { "Authorization": `Bearer ${READ_TOKEN}` },
+        cache: "no-store"
+      });
+      if (!res.ok) throw new Error(res.status + " " + res.statusText);
+      const j = await res.json();               // { result: "<json字串>" }
+      let row = null;
+      try { row = JSON.parse(j.result); } catch { row = null; }
+      if (!row || typeof row !== "object") throw new Error("資料格式不正確");
+      render(row);
+      setStatus(true, "正常");
+    } catch (e) {
+      console.error(e);
+      setStatus(false, "讀取失敗，稍後重試");
     }
+  }
 
-    // 第一次載入
-    load();
-
-    // 之後定時重載
-    setInterval(() => {
-      // 保留目前的 scroll 位置，重載後嘗試還原（可能不一定成功）
-      const scrollPos = { x: window.scrollX, y: window.scrollY };
-      load();
-      // 嘗試在下一個 frame 回到原位（視瀏覽器而定）
-      requestAnimationFrame(() => window.scrollTo(scrollPos.x, scrollPos.y));
-    }, intervalMs);
-  </script>
-</body>
+  pull();
+  setInterval(pull, INTERVAL_MS);
+</script>
 </html>
