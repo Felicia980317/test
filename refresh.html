@@ -1,87 +1,349 @@
 <!doctype html>
 <html lang="zh-Hant">
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>策略看板</title>
-<style>
-  body { font-family: ui-sans-serif, system-ui, "Segoe UI", -apple-system; margin: 24px; }
-  table { border-collapse: collapse; width: 100%; max-width: 1200px; }
-  th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: center; }
-  th { background: #f6f8fa; }
-  #status { margin: 10px 0; display: inline-block; padding: 4px 8px; border-radius: 6px; background: #ffe6e6; }
-  #status.ok { background: #e6ffed; }
-</style>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>策略看板</title>
 
-<h1>策略看板（單筆資料）</h1>
-<div id="status">初始化</div>
+  <!-- 基礎樣式（亮/暗主題、乾淨的表格與控制列） -->
+  <style>
+    :root {
+      --maxw: 1200px;
+      --bg: #ffffff;
+      --fg: #0f172a;
+      --muted: #64748b;
+      --card: #ffffff;
+      --card-border: #e5e7eb;
+      --accent: #0ea5e9;
+      --ok-bg: #e6ffed; --ok-bd: #86efac;
+      --err-bg: #ffe6e6; --err-bd: #f5c2c7;
+      --thead: #f6f8fa;
+      --row-alt: #fafafa;
+      --hover: #f1f5f9;
+    }
+    body.dark {
+      --bg: #0b1220;
+      --fg: #e5e7eb;
+      --muted: #94a3b8;
+      --card: #121a2b;
+      --card-border: #1f2a44;
+      --accent: #38bdf8;
+      --ok-bg: #083d2b; --ok-bd: #16a34a;
+      --err-bg: #3a0d0d; --err-bd: #f87171;
+      --thead: #101828;
+      --row-alt: #0f172a;
+      --hover: #0b3753;
+    }
 
-<table>
-  <thead>
-    <tr>
-      <th>名稱</th><th>更新時間</th><th>策略</th><th>標的</th>
-      <th>近一周%</th><th>近一月%</th><th>近一季%</th><th>近半年%</th><th>近一年%</th>
-      <th>MDD%</th><th>Sharpe</th>
-    </tr>
-  </thead>
-  <tbody id="tb"><tr><td colspan="11">載入中...</td></tr></tbody>
-</table>
+    html, body { height: 100%; }
+    body {
+      margin: 0; padding: 24px;
+      background: var(--bg); color: var(--fg);
+      font-family: ui-sans-serif, system-ui, "Segoe UI", -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei";
+    }
 
-<script>
-  // ➊ 換成你的 Upstash 只讀 REST URL 與 Token
-  const REST_URL = "https://guided-spider-19708.upstash.io";       // 例: https://us1-xxx.upstash.io
-  const READ_TOKEN = "Akz8AAIgcDE18SAeYebRfjHOi1t_RtbOFNv2r3NHF0kLYfDIUMnEOw";        // 只讀 Token
-  const KEY = "board:row0";
-  const INTERVAL_MS = 60000;                       // 10秒；改 60000 = 1 分鐘
+    .wrap { max-width: var(--maxw); margin: 0 auto; }
 
-  const tb = document.getElementById('tb');
-  const statusEl = document.getElementById('status');
+    /* 頁首 */
+    .topbar {
+      display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px;
+    }
+    .title { font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }
+    .toolbar { display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
+    .btn, select {
+      padding:8px 10px; border:1px solid var(--card-border); border-radius: 8px;
+      background: var(--card); color: var(--fg); cursor: pointer;
+    }
+    .btn:hover { filter: brightness(1.05); }
+    .chip {
+      display:inline-block; padding: 4px 10px; border-radius: 9999px; border:1px solid var(--card-border);
+      font-size: 12px; line-height: 1.2; background: var(--card);
+    }
+    #status { background: var(--err-bg); border-color: var(--err-bd); }
+    #status.ok { background: var(--ok-bg); border-color: var(--ok-bd); }
+    #lastRefresh { color: var(--muted); font-size: 12px; }
 
-  function fmtPct(x) {
-    if (x === null || x === undefined || isNaN(Number(x))) return "-";
-    return (Number(x).toFixed(2)) + "%";
-  }
-  function setStatus(ok, text) {
-    statusEl.className = ok ? 'ok' : '';
-    statusEl.textContent = text;
-  }
-  function render(row) {
-    const html = `
-      <tr>
-        <td>${row["名稱"] ?? "-"}</td>
-        <td>${row["更新時間"] ?? "-"}</td>
-        <td>${row["策略"] ?? "-"}</td>
-        <td>${row["標的"] ?? "-"}</td>
-        <td>${fmtPct(row["近一周%"])}</td>
-        <td>${fmtPct(row["近一月%"])}</td>
-        <td>${fmtPct(row["近一季%"])}</td>
-        <td>${fmtPct(row["近半年%"])}</td>
-        <td>${fmtPct(row["近一年%"])}</td>
-        <td>${fmtPct(row["MDD%"])}</td>
-        <td>${(row["Sharpe"] ?? "-")}</td>
-      </tr>`;
-    tb.innerHTML = html;
-  }
+    /* TradingView 卡片 */
+    .card {
+      border:1px solid var(--card-border); border-radius: 12px; background: var(--card);
+      padding: 14px; margin: 12px 0 20px;
+    }
+    .card-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+    .card-title { font-weight:600; }
 
-  async function pull() {
-    try {
-      const res = await fetch(`${REST_URL}/get/${encodeURIComponent(KEY)}`, {
+    #tv_chart { width: 100%; height: 480px; }
+
+    /* 表格 */
+    table { border-collapse: collapse; width: 100%; }
+    thead th {
+      position: sticky; top: 0; background: var(--thead); z-index: 1;
+      color: var(--fg);
+    }
+    th, td {
+      border: 1px solid var(--card-border); padding: 10px; text-align: center;
+    }
+    tbody tr:nth-child(odd) { background: var(--row-alt); }
+    tbody tr:hover { background: var(--hover); }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* 徽章與數值色彩 */
+    .badge { display:inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 12px; line-height: 1.6; border: 1px solid var(--card-border); }
+    .badge.live { background: #e6ffed; border-color: #86efac; }
+    .badge.paper { background: #e0f2fe; border-color: #93c5fd; }
+    .badge.backtest { background: #fff7ed; border-color: #fdba74; }
+    body.dark .badge.live { background:#0f3b2a; border-color:#16a34a; }
+    body.dark .badge.paper { background:#0e1f33; border-color:#60a5fa; }
+    body.dark .badge.backtest { background:#3a2a10; border-color:#fb923c; }
+
+    .pct.pos { color: #10b981; }
+    .pct.neg { color: #ef4444; }
+    .muted { color: var(--muted); }
+  </style>
+
+  <!-- TradingView 官方 widget 腳本 -->
+  <script src="https://s3.tradingview.com/tv.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <!-- 頁首 -->
+    <div class="topbar">
+      <div class="title">策略看板</div>
+      <div class="toolbar">
+        <span id="status" class="chip">初始化</span>
+        <span id="lastRefresh" class="chip">—</span>
+        <button id="themeToggle" class="btn" type="button" title="切換明/暗">切換深色</button>
+      </div>
+    </div>
+
+    <!-- TradingView 區塊 -->
+    <div class="card" aria-label="TradingView ETH K線">
+      <div class="card-head">
+        <div class="card-title">ETH/USDT K 線（TradingView）</div>
+        <div class="toolbar">
+          <label for="tv_tf">時間週期：</label>
+          <select id="tv_tf" title="選擇時間週期">
+            <option value="1">1m</option>
+            <option value="5">5m</option>
+            <option value="15" selected>15m</option>
+            <option value="60">1h</option>
+            <option value="240">4h</option>
+            <option value="D">1d</option>
+          </select>
+        </div>
+      </div>
+      <div id="tv_chart"></div>
+    </div>
+
+    <!-- 策略表格 -->
+    <table aria-label="策略清單">
+      <thead>
+        <tr>
+          <th>名稱</th>
+          <th>策略</th>
+          <th>標的</th>
+          <th>運行模式</th>
+          <th>交易所</th>
+          <th>環境</th>
+          <th>30天收益率</th>
+          <th>總收益率</th>
+          <th>估算年化</th>
+          <th>最大回撤</th>
+          <th>起始時間</th>
+          <th>更新時間</th>
+          <th>備註</th>
+        </tr>
+      </thead>
+      <tbody id="tb">
+        <tr><td class="muted" colspan="13">載入中…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // ===== 0) 主題切換（同步 TradingView 顏色） =====
+    (function setupTheme() {
+      const btn = document.getElementById('themeToggle');
+      let theme = 'light';
+      function applyTheme(next) {
+        theme = next;
+        document.body.classList.toggle('dark', theme === 'dark');
+        // 同步 TradingView 主題
+        if (window.tvWidget && typeof tvWidget.changeTheme === 'function') {
+          tvWidget.changeTheme(theme);
+        }
+        btn.textContent = theme === 'light' ? '切換深色' : '切換淺色';
+      }
+      btn.addEventListener('click', () => applyTheme(theme === 'light' ? 'dark' : 'light'));
+      applyTheme('light'); // 預設亮色
+      window.__applyTheme = applyTheme; // 給 TV 初始化時呼叫
+    })();
+
+    // ===== 1) TradingView 初始化 =====
+    let tvWidget = null;
+    window.addEventListener('DOMContentLoaded', function () {
+      // 確保 TradingView 物件存在
+      if (!window.TradingView) return console.error('TradingView 腳本未載入');
+      tvWidget = new TradingView.widget({
+        container_id: 'tv_chart',
+        autosize: true,
+        symbol: 'BINANCE:ETHUSDT',
+        interval: '15',
+        timezone: 'Asia/Taipei',
+        locale: 'zh_TW',
+        theme: document.body.classList.contains('dark') ? 'dark' : 'light',
+        style: '1',
+        withdateranges: true,
+        hide_top_toolbar: false,
+        hide_side_toolbar: false,
+        allow_symbol_change: false,
+        details: true,
+        enable_publishing: false
+      });
+
+      // 週期切換
+      const tfSel = document.getElementById('tv_tf');
+      tfSel.addEventListener('change', function () {
+        const val = tfSel.value; // '1','5','15','60','240','D'
+        tvWidget.onChartReady(function () {
+          tvWidget.chart().setResolution(val, function(){});
+        });
+      });
+
+      // 初始化時同步主題（若使用者先切了）
+      if (typeof window.__applyTheme === 'function') {
+        const current = document.body.classList.contains('dark') ? 'dark' : 'light';
+        window.__applyTheme(current);
+      }
+    });
+
+    // ===== 2) Upstash 設定 =====
+    const REST_URL    = "https://guided-spider-19708.upstash.io";
+    const READ_TOKEN  = "Akz8AAIgcDE18SAeYebRfjHOi1t_RtbOFNv2r3NHF0kLYfDIUMnEOw";
+    const KEYS        = ["board:row0", "board:row1"];
+    const INTERVAL_MS = 10000;
+    const tb = document.getElementById("tb");
+    const statusEl = document.getElementById("status");
+    const lastRefreshEl = document.getElementById("lastRefresh");
+
+    // ===== 3) 小工具 =====
+    function setStatus(ok, text) {
+      statusEl.className = ok ? "chip ok" : "chip";
+      statusEl.textContent = text;
+    }
+    function fmtPercent(x) {
+      const n = Number(x);
+      if (!isFinite(n)) return "-";
+      const val = n * 100; // 0.12 -> 12%
+      const s = val.toFixed(2) + "%";
+      const cls = val > 0 ? "pct pos" : (val < 0 ? "pct neg" : "pct");
+      const span = document.createElement("span");
+      span.className = cls;
+      span.textContent = s;
+      return span;
+    }
+    function fmtISOToTPE(iso) {
+      if (typeof iso !== "string" || !iso) return "-";
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      const f = new Intl.DateTimeFormat("zh-Hant", {
+        timeZone: "Asia/Taipei",
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+      });
+      return f.format(d);
+    }
+    function decodeVenue(venueStr) {
+      if (typeof venueStr !== "string" || !venueStr) return { exchange: "-", env: "-" };
+      const [exchange, envRaw] = venueStr.split(".");
+      const env = (envRaw || "mainnet").toLowerCase();
+      const envLabel = env === "testnet" ? "測試網" : "主網";
+      return { exchange: exchange || "-", env: envLabel };
+    }
+    function modeBadge(mode) {
+      const m = String(mode || "").toLowerCase();
+      const map = { live: "實盤", paper: "模擬", backtest: "回測" };
+      const span = document.createElement("span");
+      span.className = "badge " + (m || "default");
+      span.textContent = map[m] || m || "-";
+      return span;
+    }
+    function tdText(text, className) {
+      const td = document.createElement("td");
+      if (className) td.className = className;
+      td.textContent = (text ?? "-");
+      return td;
+    }
+
+    // ===== 4) Upstash 讀取 =====
+    async function fetchKey(key) {
+      const url = `${REST_URL}/get/${encodeURIComponent(key)}`;
+      const res = await fetch(url, {
         headers: { "Authorization": `Bearer ${READ_TOKEN}` },
         cache: "no-store"
       });
       if (!res.ok) throw new Error(res.status + " " + res.statusText);
-      const j = await res.json();               // { result: "<json字串>" }
-      let row = null;
-      try { row = JSON.parse(j.result); } catch { row = null; }
-      if (!row || typeof row !== "object") throw new Error("資料格式不正確");
-      render(row);
-      setStatus(true, "正常");
-    } catch (e) {
-      console.error(e);
-      setStatus(false, "讀取失敗，稍後重試");
+      const j = await res.json();
+      if (!j || typeof j.result !== "string") throw new Error("資料格式不正確");
+      let row;
+      try { row = JSON.parse(j.result); } catch { throw new Error("JSON 解析失敗"); }
+      if (typeof row !== "object" || !row) throw new Error("資料內容不正確");
+      return row;
     }
-  }
 
-  pull();
-  setInterval(pull, INTERVAL_MS);
-</script>
+    // ===== 5) 渲染 =====
+    function renderRows(rows) {
+      tb.innerHTML = "";
+      if (!rows.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 13; td.className = "muted"; td.textContent = "（無資料）";
+        tr.appendChild(td); tb.appendChild(tr);
+        return;
+      }
+      for (const row of rows) {
+        const { exchange, env } = decodeVenue(row.venue);
+        const tr = document.createElement("tr");
+        tr.appendChild(tdText(row.name));
+        tr.appendChild(tdText(row.strategy));
+        tr.appendChild(tdText(row.symbol));
+        { const td = document.createElement("td"); td.appendChild(modeBadge(row.run_mode)); tr.appendChild(td); }
+        tr.appendChild(tdText(exchange));
+        tr.appendChild(tdText(env));
+        { const td = document.createElement("td"); td.className = "num"; td.appendChild(fmtPercent(row.return_30d)); tr.appendChild(td); }
+        { const td = document.createElement("td"); td.className = "num"; td.appendChild(fmtPercent(row.return_total)); tr.appendChild(td); }
+        { const td = document.createElement("td"); td.className = "num"; td.appendChild(fmtPercent(row.annualized_return)); tr.appendChild(td); }
+        { const td = document.createElement("td"); td.className = "num"; td.appendChild(fmtPercent(row.max_drawdown)); tr.appendChild(td); }
+        tr.appendChild(tdText(fmtISOToTPE(row.started_at)));
+        tr.appendChild(tdText(fmtISOToTPE(row.updated_at)));
+        tr.appendChild(tdText(row.note));
+        tb.appendChild(tr);
+      }
+    }
+
+    // ===== 6) 載入與定時刷新 =====
+    async function pullAll() {
+      try {
+        const jobs = KEYS.map(k => fetchKey(k).catch(e => ({ __error__: e.message, __key__: k })));
+        const results = await Promise.all(jobs);
+        const okRows = results.filter(x => !x.__error__);
+        renderRows(okRows);
+
+        const failed = results.filter(x => x.__error__);
+        if (failed.length > 0 && okRows.length === 0) {
+          setStatus(false, "讀取失敗");
+        } else if (failed.length > 0) {
+          setStatus(true, `部分成功（失敗 ${failed.length} 筆）`);
+        } else {
+          setStatus(true, "正常");
+        }
+        lastRefreshEl.textContent = "最後更新：" + fmtISOToTPE(new Date().toISOString());
+      } catch (e) {
+        console.error(e);
+        setStatus(false, "讀取失敗，稍後重試");
+      }
+    }
+    pullAll();
+    setInterval(pullAll, INTERVAL_MS);
+  </script>
+</body>
 </html>
