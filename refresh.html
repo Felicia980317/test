@@ -160,20 +160,7 @@
   <script>
     // ===== 0) 主題切換（同步 TradingView & Chart.js） =====
     (function setupTheme() {
-      const btn = document.getElementById('themeToggle');
-      let theme = 'light';
-      function applyTheme(next) {
-        theme = next;
-        document.body.classList.toggle('dark', theme === 'dark');
-        if (window.tvWidget && typeof tvWidget.changeTheme === 'function') {
-          tvWidget.changeTheme(theme);
-        }
-        if (window.__rerenderOpenCharts) window.__rerenderOpenCharts();
-        btn.textContent = theme === 'light' ? '切換深色' : '切換淺色';
-      }
-      btn.addEventListener('click', () => applyTheme(theme === 'light' ? 'dark' : 'light'));
-      applyTheme('light');
-      window.__applyTheme = applyTheme;
+
     })();
 
     // ===== 1) TradingView 初始化 =====
