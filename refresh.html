@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>策略看板</title>
 
-  <!-- 基礎樣式（亮/暗主題、乾淨的表格與控制列） -->
   <style>
     :root {
       --maxw: 1200px;
@@ -15,11 +14,11 @@
       --card: #ffffff;
       --card-border: #e5e7eb;
       --accent: #0ea5e9;
-      --ok-bg: #e6ffed; --ok-bd: #86efac;
-      --err-bg: #ffe6e6; --err-bd: #f5c2c7;
       --thead: #f6f8fa;
       --row-alt: #fafafa;
       --hover: #f1f5f9;
+      --ok-bg: #e6ffed; --ok-bd: #86efac;
+      --err-bg: #ffe6e6; --err-bd: #f5c2c7;
     }
     body.dark {
       --bg: #0b1220;
@@ -28,8 +27,6 @@
       --card: #121a2b;
       --card-border: #1f2a44;
       --accent: #38bdf8;
-      --ok-bg: #083d2b; --ok-bd: #16a34a;
-      --err-bg: #3a0d0d; --err-bd: #f87171;
       --thead: #101828;
       --row-alt: #0f172a;
       --hover: #0b3753;
@@ -41,19 +38,16 @@
       background: var(--bg); color: var(--fg);
       font-family: ui-sans-serif, system-ui, "Segoe UI", -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei";
     }
-
     .wrap { max-width: var(--maxw); margin: 0 auto; }
 
-    /* 頁首 */
-    .topbar {
-      display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px;
-    }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px; }
     .title { font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }
     .toolbar { display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
     .btn, select {
       padding:8px 10px; border:1px solid var(--card-border); border-radius: 8px;
       background: var(--card); color: var(--fg); cursor: pointer;
     }
+    .btn.small { font-size: 12px; padding:6px 8px; }
     .btn:hover { filter: brightness(1.05); }
     .chip {
       display:inline-block; padding: 4px 10px; border-radius: 9999px; border:1px solid var(--card-border);
@@ -63,45 +57,42 @@
     #status.ok { background: var(--ok-bg); border-color: var(--ok-bd); }
     #lastRefresh { color: var(--muted); font-size: 12px; }
 
-    /* TradingView 卡片 */
     .card {
       border:1px solid var(--card-border); border-radius: 12px; background: var(--card);
       padding: 14px; margin: 12px 0 20px;
     }
     .card-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
     .card-title { font-weight:600; }
+    #tv_chart { width: 100%; height: 420px; }
 
-    #tv_chart { width: 100%; height: 480px; }
-
-    /* 表格 */
     table { border-collapse: collapse; width: 100%; }
-    thead th {
-      position: sticky; top: 0; background: var(--thead); z-index: 1;
-      color: var(--fg);
-    }
-    th, td {
-      border: 1px solid var(--card-border); padding: 10px; text-align: center;
-    }
-    tbody tr:nth-child(odd) { background: var(--row-alt); }
-    tbody tr:hover { background: var(--hover); }
+    thead th { position: sticky; top: 0; background: var(--thead); z-index: 1; color: var(--fg); }
+    th, td { border: 1px solid var(--card-border); padding: 10px; text-align: center; }
+    tbody tr:nth-child(odd) .data-row { background: var(--row-alt); }
+    tbody tr:hover .data-row { background: var(--hover); }
     td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tr.chart-row > td { background: var(--card); }
 
-    /* 徽章與數值色彩 */
     .badge { display:inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 12px; line-height: 1.6; border: 1px solid var(--card-border); }
     .badge.live { background: #e6ffed; border-color: #86efac; }
     .badge.paper { background: #e0f2fe; border-color: #93c5fd; }
     .badge.backtest { background: #fff7ed; border-color: #fdba74; }
-    body.dark .badge.live { background:#0f3b2a; border-color:#16a34a; }
+    body.dark .badge.live { background:#0f3b2a; border-color:#16a4a4; }
     body.dark .badge.paper { background:#0e1f33; border-color:#60a5fa; }
     body.dark .badge.backtest { background:#3a2a10; border-color:#fb923c; }
 
     .pct.pos { color: #10b981; }
     .pct.neg { color: #ef4444; }
     .muted { color: var(--muted); }
+
+    .chart-wrap { display:none; padding: 12px 6px; }
+    .chart-title { text-align:left; font-weight:600; margin-bottom:8px; }
+    .chart-meta { text-align:left; font-size:12px; color: var(--muted); margin-bottom:6px; }
+    .chart-canvas { width:100%; height:320px; }
   </style>
 
-  <!-- TradingView 官方 widget 腳本 -->
   <script src="https://s3.tradingview.com/tv.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -134,54 +125,60 @@
       <div id="tv_chart"></div>
     </div>
 
-    <!-- 策略表格 -->
-    <table aria-label="策略清單">
-      <thead>
-        <tr>
-          <th>名稱</th>
-          <th>策略</th>
-          <th>標的</th>
-          <th>運行模式</th>
-          <th>交易所</th>
-          <th>環境</th>
-          <th>30天收益率</th>
-          <th>總收益率</th>
-          <th>估算年化</th>
-          <th>最大回撤</th>
-          <th>起始時間</th>
-          <th>更新時間</th>
-          <th>備註</th>
-        </tr>
-      </thead>
-      <tbody id="tb">
-        <tr><td class="muted" colspan="13">載入中…</td></tr>
-      </tbody>
-    </table>
+    <!-- 策略表格（數據0→圖表0→數據1→圖表1 …） -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">策略列表</div>
+        <div class="muted">按照 KEYS 順序渲染</div>
+      </div>
+      <table aria-label="策略清單">
+        <thead>
+          <tr>
+            <th style="width:140px;">名稱</th>
+            <th>策略</th>
+            <th>標的</th>
+            <th>運行模式</th>
+            <th>交易所</th>
+            <th>環境</th>
+            <th>7天收益率</th>
+            <th>30天收益率</th>
+            <th>總收益率</th>
+            <th>估算年化</th>
+            <th>最大回撤</th>
+            <th>起始時間</th>
+            <th>更新時間</th>
+            <th style="width:110px;">回測圖表</th>
+          </tr>
+        </thead>
+        <tbody id="tb">
+          <tr><td class="muted" colspan="14">載入中…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <script>
-    // ===== 0) 主題切換（同步 TradingView 顏色） =====
+    // ===== 0) 主題切換（同步 TradingView & Chart.js） =====
     (function setupTheme() {
       const btn = document.getElementById('themeToggle');
       let theme = 'light';
       function applyTheme(next) {
         theme = next;
         document.body.classList.toggle('dark', theme === 'dark');
-        // 同步 TradingView 主題
         if (window.tvWidget && typeof tvWidget.changeTheme === 'function') {
           tvWidget.changeTheme(theme);
         }
+        if (window.__rerenderOpenCharts) window.__rerenderOpenCharts();
         btn.textContent = theme === 'light' ? '切換深色' : '切換淺色';
       }
       btn.addEventListener('click', () => applyTheme(theme === 'light' ? 'dark' : 'light'));
-      applyTheme('light'); // 預設亮色
-      window.__applyTheme = applyTheme; // 給 TV 初始化時呼叫
+      applyTheme('light');
+      window.__applyTheme = applyTheme;
     })();
 
     // ===== 1) TradingView 初始化 =====
     let tvWidget = null;
     window.addEventListener('DOMContentLoaded', function () {
-      // 確保 TradingView 物件存在
       if (!window.TradingView) return console.error('TradingView 腳本未載入');
       tvWidget = new TradingView.widget({
         container_id: 'tv_chart',
@@ -199,48 +196,48 @@
         details: true,
         enable_publishing: false
       });
-
-      // 週期切換
       const tfSel = document.getElementById('tv_tf');
       tfSel.addEventListener('change', function () {
-        const val = tfSel.value; // '1','5','15','60','240','D'
+        const val = tfSel.value;
         tvWidget.onChartReady(function () {
           tvWidget.chart().setResolution(val, function(){});
         });
       });
-
-      // 初始化時同步主題（若使用者先切了）
       if (typeof window.__applyTheme === 'function') {
         const current = document.body.classList.contains('dark') ? 'dark' : 'light';
         window.__applyTheme(current);
       }
     });
 
-    // ===== 2) Upstash 設定 =====
+    // ===== 2) Upstash 設定（照這個順序渲染）=====
     const REST_URL    = "https://guided-spider-19708.upstash.io";
     const READ_TOKEN  = "Akz8AAIgcDE18SAeYebRfjHOi1t_RtbOFNv2r3NHF0kLYfDIUMnEOw";
-    const KEYS        = ["board:row0", "board:row1", "board:row2"];
+    const KEYS        = ["board:row0", "board:row1", "board:row2"]; // 你要更多就加這裡
     const INTERVAL_MS = 300000;
+
     const tb = document.getElementById("tb");
     const statusEl = document.getElementById("status");
     const lastRefreshEl = document.getElementById("lastRefresh");
 
-    // ===== 3) 小工具 =====
+    // 每個 boardKey 的圖表實例 & 是否已渲染
+    const chartInstances = new Map();   // boardKey -> Chart instance
+    const chartSeriesCache = new Map(); // boardKey -> [{date,equity,eth_close}, ...] or []
+
+    // ===== 3) 小工具（DOM Node-only）=====
     function setStatus(ok, text) {
       statusEl.className = ok ? "chip ok" : "chip";
       statusEl.textContent = text;
     }
-    function fmtPercent(x) {
-      const n = Number(x);
-      if (!isFinite(n)) return "-";
-      const val = n * 100; // 0.12 -> 12%
-      const s = val.toFixed(2) + "%";
-      const cls = val > 0 ? "pct pos" : (val < 0 ? "pct neg" : "pct");
+    function fmtPercentNode(x) {
       const span = document.createElement("span");
-      span.className = cls;
-      span.textContent = s;
+      const n = Number(x);
+      if (!isFinite(n)) { span.className = "pct"; span.textContent = "-"; return span; }
+      const val = n * 100;
+      span.textContent = val.toFixed(2) + "%";
+      span.className = val > 0 ? "pct pos" : (val < 0 ? "pct neg" : "pct");
       return span;
     }
+    function textNode(s) { const span = document.createElement("span"); span.textContent = (s ?? "-"); return span; }
     function fmtISOToTPE(iso) {
       if (typeof iso !== "string" || !iso) return "-";
       const d = new Date(iso);
@@ -248,7 +245,7 @@
       const f = new Intl.DateTimeFormat("zh-Hant", {
         timeZone: "Asia/Taipei",
         year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", second: "2-digit"
+        hour: "2-digit", minute: "2-digit"   // ⬅️ 不要 second
       });
       return f.format(d);
     }
@@ -267,81 +264,284 @@
       span.textContent = map[m] || m || "-";
       return span;
     }
-    function tdText(text, className) {
+    function tdNode(child, className) {
       const td = document.createElement("td");
       if (className) td.className = className;
-      td.textContent = (text ?? "-");
+      td.appendChild(child);
       return td;
+    }
+    function seriesKeyForBoard(boardKey, rowObj) {
+      if (rowObj && typeof rowObj.series_key === "string" && rowObj.series_key.length) return rowObj.series_key;
+      const rowId = String(boardKey).split(":")[1] || "row0";
+      return `series:${rowId}:equity30d`;
     }
 
     // ===== 4) Upstash 讀取 =====
     async function fetchKey(key) {
       const url = `${REST_URL}/get/${encodeURIComponent(key)}`;
-      const res = await fetch(url, {
-        headers: { "Authorization": `Bearer ${READ_TOKEN}` },
-        cache: "no-store"
-      });
+      const res = await fetch(url, { headers: { "Authorization": `Bearer ${READ_TOKEN}` }, cache: "no-store" });
       if (!res.ok) throw new Error(res.status + " " + res.statusText);
       const j = await res.json();
       if (!j || typeof j.result !== "string") throw new Error("資料格式不正確");
-      let row;
-      try { row = JSON.parse(j.result); } catch { throw new Error("JSON 解析失敗"); }
+      let row; try { row = JSON.parse(j.result); } catch { throw new Error("JSON 解析失敗"); }
       if (typeof row !== "object" || !row) throw new Error("資料內容不正確");
       return row;
     }
+    async function fetchSeries(seriesKey) {
+      const url = `${REST_URL}/get/${encodeURIComponent(seriesKey)}`;
+      const res = await fetch(url, { headers: { "Authorization": `Bearer ${READ_TOKEN}` }, cache: "no-store" });
+      if (!res.ok) throw new Error(res.status + " " + res.statusText);
+      const j = await res.json();
+      if (!j || typeof j.result !== "string") throw new Error("資料格式不正確");
+      let arr; try { arr = JSON.parse(j.result); } catch { throw new Error("JSON 解析失敗"); }
+      if (!Array.isArray(arr)) throw new Error("序列不是陣列");
+      return arr;
+    }
 
-    // ===== 5) 渲染 =====
-    function renderRows(rows) {
+    // ===== 5) 畫圖（單一 boardKey）=====
+    function renderChartInto(boardKey, canvas, series) {
+      const ctx = canvas.getContext("2d");
+      const isDark = document.body.classList.contains('dark');
+
+      // 銷毀舊圖
+      if (chartInstances.has(boardKey)) {
+        chartInstances.get(boardKey).destroy();
+        chartInstances.delete(boardKey);
+      }
+      if (!Array.isArray(series) || series.length === 0) return; // 沒資料直接不畫
+
+      const labels = series.map(x => String(x.date));
+      const equity  = series.map(x => Number(x.equity));
+      const price   = series.map(x => Number(x.eth_close));
+
+      const chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            { label: "Equity", data: equity, yAxisID: "yEquity", tension: 0.25, pointRadius: 0, borderWidth: 2 },
+            { label: "ETH Close", data: price,  yAxisID: "yPrice",  tension: 0.25, pointRadius: 0, borderWidth: 2 }
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { display: true, labels: { color: isDark ? "#e5e7eb" : "#0f172a" } },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const ds = ctx.dataset.label || "";
+                  const v = ctx.parsed.y;
+                  return ds + ": " + (typeof v === "number" ? v.toLocaleString() : v);
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: isDark ? "#cbd5e1" : "#334155", maxRotation: 0, autoSkip: true, maxTicksLimit: 10 },
+              grid:  { color: isDark ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.2)" }
+            },
+            yEquity: {
+              type: "linear", position: "left",
+              title: { display: true, text: "Equity", color: isDark ? "#e5e7eb" : "#0f172a" },
+              ticks: { color: isDark ? "#cbd5e1" : "#334155" },
+              grid:  { color: isDark ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.2)" }
+            },
+            yPrice: {
+              type: "linear", position: "right",
+              title: { display: true, text: "ETH", color: isDark ? "#e5e7eb" : "#0f172a" },
+              ticks: { color: isDark ? "#cbd5e1" : "#334155" },
+              grid:  { drawOnChartArea: false, color: isDark ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.2)" }
+            }
+          }
+        }
+      });
+      chartInstances.set(boardKey, chart);
+    }
+
+    // 主題切換時，重繪目前「展開顯示中」的圖表
+    window.__rerenderOpenCharts = function() {
+      for (const [boardKey, chart] of chartInstances.entries()) {
+        // 重新把 cache 中的 series 畫一次
+        const series = chartSeriesCache.get(boardKey) || [];
+        const canvas = document.getElementById(`canvas-${boardKey.replace(":","-")}`);
+        if (!canvas || canvas.closest(".chart-wrap").style.display === "none") continue; // 沒展開就略過
+        renderChartInto(boardKey, canvas, series);
+      }
+    };
+
+    // ===== 6) 渲染表格（數據列 + 圖表列；按 KEYS 順序）=====
+    function renderTable(rowsByKey, seriesAvailability) {
       tb.innerHTML = "";
-      if (!rows.length) {
+      if (KEYS.length === 0) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 13; td.className = "muted"; td.textContent = "（無資料）";
+        td.colSpan = 14; td.className = "muted"; td.textContent = "（無資料）";
         tr.appendChild(td); tb.appendChild(tr);
         return;
       }
-      for (const row of rows) {
+
+      for (const key of KEYS) {
+        const row = rowsByKey.get(key);
+        if (!row) continue; // 該 key 沒取到就略過
         const { exchange, env } = decodeVenue(row.venue);
-        const tr = document.createElement("tr");
-        tr.appendChild(tdText(row.name));
-        tr.appendChild(tdText(row.strategy));
-        tr.appendChild(tdText(row.symbol));
-        { const td = document.createElement("td"); td.appendChild(modeBadge(row.run_mode)); tr.appendChild(td); }
-        tr.appendChild(tdText(exchange));
-        tr.appendChild(tdText(env));
-        { const td = document.createElement("td"); td.className = "num"; td.appendChild(fmtPercent(row.return_30d)); tr.appendChild(td); }
-        { const td = document.createElement("td"); td.className = "num"; td.appendChild(fmtPercent(row.return_total)); tr.appendChild(td); }
-        { const td = document.createElement("td"); td.className = "num"; td.appendChild(fmtPercent(row.annualized_return)); tr.appendChild(td); }
-        { const td = document.createElement("td"); td.className = "num"; td.appendChild(fmtPercent(row.max_drawdown)); tr.appendChild(td); }
-        tr.appendChild(tdText(fmtISOToTPE(row.started_at)));
-        tr.appendChild(tdText(fmtISOToTPE(row.updated_at)));
-        tr.appendChild(tdText(row.note));
+
+        // ===== 資料列 =====
+        const tr = document.createElement("tr"); tr.className = "data-row";
+        tr.appendChild(tdNode(textNode(row.name)));
+        tr.appendChild(tdNode(textNode(row.strategy)));
+        tr.appendChild(tdNode(textNode(row.symbol)));
+        tr.appendChild(tdNode(modeBadge(row.run_mode)));
+        tr.appendChild(tdNode(textNode(exchange)));
+        tr.appendChild(tdNode(textNode(env)));
+        tr.appendChild(tdNode(fmtPercentNode(row.return_7d), "num"));
+        tr.appendChild(tdNode(fmtPercentNode(row.return_30d), "num"));
+        tr.appendChild(tdNode(fmtPercentNode(row.return_total), "num"));
+        tr.appendChild(tdNode(fmtPercentNode(row.annualized_return), "num"));
+        tr.appendChild(tdNode(fmtPercentNode(row.max_drawdown), "num"));
+        tr.appendChild(tdNode(textNode(fmtISOToTPE(row.started_at))));
+        tr.appendChild(tdNode(textNode(fmtISOToTPE(row.updated_at))));
+
+        // 展開按鈕（只有有序列資料才顯示）
+        const tdBtn = document.createElement("td");
+        const hasSeries = !!seriesAvailability.get(key);
+        if (hasSeries) {
+          const btn = document.createElement("button");
+          btn.className = "btn small";
+          btn.textContent = "查看曲線";
+          btn.addEventListener("click", () => toggleChartRow(key, row));
+          tdBtn.appendChild(btn);
+        } else {
+          tdBtn.appendChild(textNode("—"));
+        }
+        tr.appendChild(tdBtn);
         tb.appendChild(tr);
+
+        // ===== 圖表列（預設隱藏；若 hasSeries=false，完全不建立）=====
+        if (hasSeries) {
+          const trChart = document.createElement("tr");
+          trChart.className = "chart-row";
+          trChart.id = `chartrow-${key.replace(":","-")}`;
+          const tdChart = document.createElement("td");
+          tdChart.colSpan = 14;
+
+          const wrap = document.createElement("div");
+          wrap.className = "chart-wrap"; // 控制 display
+
+          const title = document.createElement("div");
+          title.className = "chart-title";
+          title.textContent = `${row.name || key} — 近 30 天資金 & ETH 收盤`;
+
+          const meta = document.createElement("div");
+          meta.className = "chart-meta";
+          const sKey = seriesKeyForBoard(key, row);
+          meta.textContent = `series: ${sKey}`;
+
+          const canvas = document.createElement("canvas");
+          canvas.className = "chart-canvas";
+          canvas.id = `canvas-${key.replace(":","-")}`;
+
+          wrap.appendChild(title);
+          wrap.appendChild(meta);
+          wrap.appendChild(canvas);
+          tdChart.appendChild(wrap);
+          trChart.appendChild(tdChart);
+          tb.appendChild(trChart);
+        }
       }
     }
 
-    // ===== 6) 載入與定時刷新 =====
+    // ===== 7) 展開/收起某一圖表列，第一次展開時繪圖 =====
+    async function toggleChartRow(boardKey, rowObj) {
+      const rowId = boardKey.replace(":","-");
+      const chartTr = document.getElementById(`chartrow-${rowId}`);
+      if (!chartTr) return;
+
+      const wrap = chartTr.querySelector(".chart-wrap");
+      const currentlyVisible = wrap.style.display === "block";
+      if (currentlyVisible) {
+        // 收起
+        wrap.style.display = "none";
+        return;
+      }
+
+      // 展開
+      wrap.style.display = "block";
+
+      // 若已經畫過且有 cache，就直接重畫一次（適應主題）
+      const canvas = chartTr.querySelector("canvas");
+      if (chartSeriesCache.has(boardKey)) {
+        const series = chartSeriesCache.get(boardKey) || [];
+        renderChartInto(boardKey, canvas, series);
+        return;
+      }
+
+      // 第一次展開：拉 series、cache、畫圖
+      const sKey = seriesKeyForBoard(boardKey, rowObj);
+      try {
+        const series = await fetchSeries(sKey);
+        chartSeriesCache.set(boardKey, series);
+        renderChartInto(boardKey, canvas, series);
+      } catch (e) {
+        console.error("讀 series 失敗", boardKey, sKey, e);
+        wrap.style.display = "none"; // 拉失敗就立刻收起
+      }
+    }
+
+    // ===== 8) 拉資料並渲染（保持 KEYS 順序；探測是否有序列）=====
     async function pullAll() {
       try {
-        const jobs = KEYS.map(k => fetchKey(k).catch(e => ({ __error__: e.message, __key__: k })));
-        const results = await Promise.all(jobs);
-        const okRows = results.filter(x => !x.__error__);
-        renderRows(okRows);
+        // 1) 依 KEYS 順序抓 board rows
+        const rowsByKey = new Map();
+        const probeSeries = new Map(); // boardKey -> 是否有序列（非空陣列）
 
-        const failed = results.filter(x => x.__error__);
-        if (failed.length > 0 && okRows.length === 0) {
-          setStatus(false, "讀取失敗");
-        } else if (failed.length > 0) {
-          setStatus(true, `部分成功（失敗 ${failed.length} 筆）`);
-        } else {
-          setStatus(true, "正常");
+        for (const k of KEYS) {
+          try {
+            const row = await fetchKey(k);
+            rowsByKey.set(k, row);
+          } catch (e) {
+            console.error("讀取 board 失敗", k, e);
+          }
         }
-        lastRefreshEl.textContent = "最後更新：" + fmtISOToTPE(new Date().toISOString());
+
+        // 2) 探測每個 row 是否有可用 series（沒有就不顯示圖表列）
+        for (const k of KEYS) {
+          const row = rowsByKey.get(k);
+          if (!row) { probeSeries.set(k, false); continue; }
+          const sKey = seriesKeyForBoard(k, row);
+          try {
+            const arr = await fetchSeries(sKey);
+            const ok = Array.isArray(arr) && arr.length > 0;
+            probeSeries.set(k, ok);
+            if (ok) {
+              // 可先存起來，等使用者點開時不用再拉（也 OK 重新拉）
+              chartSeriesCache.set(k, arr);
+            }
+          } catch (e) {
+            console.warn("探測 series 失敗（視為無）", k, e);
+            probeSeries.set(k, false);
+          }
+        }
+
+        // 3) 渲染表格（數據列 & 圖表列）
+        renderTable(rowsByKey, probeSeries);
+
+        setStatus(true, "正常");
+        lastRefreshEl.textContent = "最後更新：" + new Date().toLocaleString("zh-TW", { hour12:false });
+
       } catch (e) {
         console.error(e);
         setStatus(false, "讀取失敗，稍後重試");
+        tb.innerHTML = "";
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 14; td.className = "muted"; td.textContent = "（讀取失敗）";
+        tr.appendChild(td); tb.appendChild(tr);
       }
     }
+
     pullAll();
     setInterval(pullAll, INTERVAL_MS);
   </script>
