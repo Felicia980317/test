@@ -254,7 +254,7 @@
 
     // 每個 boardKey 的圖表實例與序列快取
     const chartInstances = new Map();   // boardKey -> Chart instance
-    const chartSeriesCache = new Map(); // boardKey -> [{date,equity,eth_close}, ...]
+    const chartSeriesCache = new Map(); // boardKey -> [{date,equity,eth_close 或 btc_close}, ...]
 
     // =========================
     // 3) DOM 與格式化工具
@@ -378,9 +378,16 @@
       }
       if (!Array.isArray(series) || series.length === 0) return;
 
+      // [NEW] 動態判斷使用 eth_close 或 btc_close
+      const sample = series.find(x => x && typeof x === "object") || {};
+      const hasEth = Object.prototype.hasOwnProperty.call(sample, "eth_close");
+      const hasBtc = Object.prototype.hasOwnProperty.call(sample, "btc_close");
+      const priceKey = hasEth ? "eth_close" : (hasBtc ? "btc_close" : null); // 僅在兩者之一存在時使用
+      const assetLabel = priceKey === "btc_close" ? "BTC" : "ETH"; // 預設 ETH
+
       const labels = series.map(x => String(x.date));
       const equity  = series.map(x => Number(x.equity));
-      const price   = series.map(x => Number(x.eth_close));
+      const price   = priceKey ? series.map(x => Number(x[priceKey])) : []; // [NEW]
 
       const chart = new Chart(ctx, {
         type: "line",
@@ -388,7 +395,8 @@
           labels,
           datasets: [
             { label: "Equity", data: equity, yAxisID: "yEquity", tension: 0.25, pointRadius: 0, borderWidth: 2 },
-            { label: "ETH Close", data: price,  yAxisID: "yPrice",  tension: 0.25, pointRadius: 0, borderWidth: 2 }
+            // [MOD] 依 priceKey 切換名稱（ETH Close / BTC Close）
+            { label: assetLabel + " Close", data: price, yAxisID: "yPrice", tension: 0.25, pointRadius: 0, borderWidth: 2 }
           ]
         },
         options: {
@@ -419,7 +427,8 @@
             },
             yPrice: {
               type: "linear", position: "right",
-              title: { display: true, text: "ETH", color: isDark ? "#e5e7eb" : "#0f172a" },
+              // [MOD] 依資產切換 Y 軸標題
+              title: { display: true, text: assetLabel, color: isDark ? "#e5e7eb" : "#0f172a" },
               ticks: { color: isDark ? "#cbd5e1" : "#334155" },
               grid:  { drawOnChartArea: false, color: isDark ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.2)" }
             }
@@ -427,6 +436,23 @@
         }
       });
       chartInstances.set(boardKey, chart);
+
+      // [NEW] 展開後，同步更新圖表標題與 meta，明確顯示使用的 price 欄位
+      const wrap = canvas.closest(".chart-wrap");
+      if (wrap) {
+        const titleEl = wrap.querySelector(".chart-title");
+        const metaEl  = wrap.querySelector(".chart-meta");
+        if (titleEl) {
+          // 原本是「資金曲線與 ETH 收盤」，現在改成動態資產
+          titleEl.textContent = titleEl.textContent.replace(/資金曲線與.*收盤/, `資金曲線與 ${assetLabel} 收盤`);
+        }
+        if (metaEl) {
+          const old = metaEl.textContent || "";
+          const info = priceKey ? `（price: ${priceKey}）` : `（price: 無對應欄位）`;
+          // 若已包含 price 提示就不重覆疊加
+          if (!/（price:/.test(old)) metaEl.textContent = `${old} ${info}`.trim();
+        }
+      }
     }
 
     // 主題切換時對已展開圖表重繪
@@ -501,7 +527,8 @@
 
           const title = document.createElement("div");
           title.className = "chart-title";
-          title.textContent = `${row.name || key} — 資金曲線與 ETH 收盤`;
+          // [MOD] 先放通用標題，實際資產會在 renderChartInto 時動態替換
+          title.textContent = `${row.name || key} — 資金曲線與 收盤`;
 
           const meta = document.createElement("div");
           meta.className = "chart-meta";
