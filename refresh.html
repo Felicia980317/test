@@ -68,10 +68,22 @@
     table { border-collapse: collapse; width: 100%; }
     thead th { position: sticky; top: 0; background: var(--thead); z-index: 1; color: var(--fg); }
     th, td { border: 1px solid var(--card-border); padding: 10px; text-align: center; }
-    tbody tr:nth-child(odd) .data-row { background: var(--row-alt); }
-    tbody tr:hover .data-row { background: var(--hover); }
+    /* [FIX] 原本的 nth-child 選到子元素，這裡直接套 tr 本身 */
+    tbody tr.data-row:nth-of-type(odd) td { background: var(--row-alt); }
+    tbody tr.data-row:hover td { background: var(--hover); }
     td.num { text-align: right; font-variant-numeric: tabular-nums; }
-    tr.chart-row > td { background: var(--card); }
+
+    /* [FIX] 圖表行的顯示與邊框：預設整行隱藏；展開時只保留頂部邊框，去掉左右邊框以免直線滲入上一行格子 */
+    tr.chart-row { display: none; }
+    tr.chart-row.open { display: table-row; }
+    tr.chart-row > td {
+      background: var(--card);
+      border-top: 1px solid var(--card-border);
+      border-bottom: 0;
+      border-left: 0;   /* 關鍵：去掉左右邊框，避免「直線」出現在上一行某欄位內 */
+      border-right: 0;  /* 關鍵 */
+      padding-top: 6px;
+    }
 
     .badge { display:inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 12px; line-height: 1.6; border: 1px solid var(--card-border); }
     .badge.live { background: #e6ffed; border-color: #86efac; }
@@ -85,19 +97,17 @@
     .pct.neg { color: #ef4444; }
     .muted { color: var(--muted); }
 
-    .chart-wrap { display:none; padding: 12px 6px; }
+    .chart-wrap { padding: 8px 6px; }
     .chart-title { text-align:left; font-weight:600; margin-bottom:8px; }
     .chart-meta { text-align:left; font-size:12px; color: var(--muted); margin-bottom:6px; }
     .chart-canvas { width:100%; height:320px; }
   </style>
 
-  <!-- 第三方資源：公網版；企業內網請改自家 CDN -->
   <script src="https://s3.tradingview.com/tv.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="wrap">
-    <!-- 頁首：操作列與即時狀態 -->
     <div class="topbar">
       <div class="title">策略看板</div>
       <div class="toolbar">
@@ -107,7 +117,6 @@
       </div>
     </div>
 
-    <!-- TradingView 區塊：主要行情參考 -->
     <div class="card" aria-label="TradingView ETH K線">
       <div class="card-head">
         <div class="card-title">ETH/USDT K 線（TradingView）</div>
@@ -126,7 +135,6 @@
       <div id="tv_chart"></div>
     </div>
 
-    <!-- 策略清單：以自動探索的 board:* 結果渲染 -->
     <div class="card">
       <div class="card-head">
         <div class="card-title">策略列表</div>
@@ -159,51 +167,29 @@
   </div>
 
   <script>
-    // ==========================================================
-    // 全域變數需在任何函式之前宣告，以避免 TDZ 造成的 ReferenceError
-    // ==========================================================
-    let tvWidget = null; // TradingView widget 參考，供重建/更新時使用
+    let tvWidget = null;
 
-    // =========================
-    // 0) 主題切換與視覺同步
-    // =========================
     (function setupTheme() {
       const btn = document.getElementById('themeToggle');
-
       function applyTheme(theme) {
         const isDark = theme === 'dark';
         document.body.classList.toggle('dark', isDark);
         btn.textContent = isDark ? '切換淺色' : '切換深色';
-
-        // Chart.js：已展開圖表需重繪以套用字色/格線
         if (typeof window.__rerenderOpenCharts === 'function') window.__rerenderOpenCharts();
-
-        // TradingView：該元件不支援動態主題，改為重建
         recreateTVWidget();
       }
-
       btn.addEventListener('click', () => {
         const next = document.body.classList.contains('dark') ? 'light' : 'dark';
         applyTheme(next);
       });
-
-      // 初始為淺色主題
       applyTheme('light');
-      // 暴露給首次載入 TV 完成後同步
       window.__applyTheme = applyTheme;
     })();
 
-    // =========================
-    // 1) TradingView 初始化/重建
-    // =========================
     function recreateTVWidget() {
-      // 若 TradingView 尚未載入或容器不存在，直接跳過
       const container = document.getElementById('tv_chart');
       if (!window.TradingView || !container) return;
-
-      // 清空容器（避免多重掛載）
       container.innerHTML = '';
-
       tvWidget = new TradingView.widget({
         container_id: 'tv_chart',
         autosize: true,
@@ -223,10 +209,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', function () {
-      if (!window.TradingView) {
-        console.error('[TradingView] Script 未載入');
-        return;
-      }
+      if (!window.TradingView) { console.error('[TradingView] Script 未載入'); return; }
       recreateTVWidget();
       const tfSel = document.getElementById('tv_tf');
       tfSel.addEventListener('change', function () {
@@ -241,24 +224,17 @@
       }
     });
 
-    // ==========================================================
-    // 2) Upstash 設定（請依專案替換 REST_URL / READ_TOKEN）
-    // ==========================================================
-    const REST_URL    = "https://guided-spider-19708.upstash.io"; // ← 替換為你的 REST URL
-    const READ_TOKEN  = "Akz8AAIgcDE18SAeYebRfjHOi1t_RtbOFNv2r3NHF0kLYfDIUMnEOw"; // ← 替換為你的 Read Token
-    const INTERVAL_MS = 600000; // 定時更新頻率：10 分鐘
+    const REST_URL    = "https://guided-spider-19708.upstash.io";
+    const READ_TOKEN  = "Akz8AAIgcDE18SAeYebRfjHOi1t_RtbOFNv2r3NHF0kLYfDIUMnEOw";
+    const INTERVAL_MS = 600000;
 
     const tb = document.getElementById("tb");
     const statusEl = document.getElementById("status");
     const lastRefreshEl = document.getElementById("lastRefresh");
 
-    // 每個 boardKey 的圖表實例與序列快取
-    const chartInstances = new Map();   // boardKey -> Chart instance
-    const chartSeriesCache = new Map(); // boardKey -> [{date,equity,eth_close 或 btc_close}, ...]
+    const chartInstances = new Map();
+    const chartSeriesCache = new Map();
 
-    // =========================
-    // 3) DOM 與格式化工具
-    // =========================
     function setStatus(ok, text) {
       statusEl.className = ok ? "chip ok" : "chip";
       statusEl.textContent = text;
@@ -306,17 +282,13 @@
       return td;
     }
 
-    // ===================================================
-    // 4) Upstash REST：SCAN / GET 封裝與 series 對應邏輯
-    // ===================================================
     async function upstashGet(pathWithArgs) {
       const url = `${REST_URL}/${pathWithArgs}`;
       const res = await fetch(url, { headers: { "Authorization": `Bearer ${READ_TOKEN}` }, cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      return res.json(); // {result: ...} or {result: [cursor, [keys...]]}
+      return res.json();
     }
 
-    // 以 SCAN 分頁列出 "board:*"；使用 COUNT 控制每頁批次，避免阻塞
     async function scanBoardKeys(match = "board:*", pageCount = 200) {
       let cursor = "0";
       const all = [];
@@ -330,7 +302,6 @@
       return all;
     }
 
-    // 讀單一 key 的 JSON 值並解析
     async function fetchKeyJSON(key) {
       const j = await upstashGet(`get/${encodeURIComponent(key)}`);
       if (!j || typeof j.result !== "string") throw new Error("GET 回傳格式異常");
@@ -339,7 +310,6 @@
       return row;
     }
 
-    // 讀 series；若不存在會丟出錯誤，供呼叫端降級處理
     async function fetchSeriesJSON(seriesKey) {
       const j = await upstashGet(`get/${encodeURIComponent(seriesKey)}`);
       if (!j || typeof j.result !== "string") throw new Error("GET 回傳格式異常");
@@ -348,7 +318,6 @@
       return arr;
     }
 
-    // 由 board key 推導 series key；支援 row.series_key 覆寫；預設 equity → equity30d
     async function resolveSeriesForBoard(boardKey, rowObj) {
       if (rowObj && typeof rowObj.series_key === "string" && rowObj.series_key) {
         return { key: rowObj.series_key, available: true, data: await fetchSeriesJSON(rowObj.series_key) };
@@ -359,35 +328,31 @@
         try {
           const data = await fetchSeriesJSON(sKey);
           return { key: sKey, available: true, data };
-        } catch (_) { /* 繼續嘗試下一個候選 key */ }
+        } catch (_) {}
       }
       return { key: `series:${custom}:equity`, available: false, data: [] };
     }
 
-    // =======================================
-    // 5) Chart.js 繪圖（單一 boardKey）
-    // =======================================
     function renderChartInto(boardKey, canvas, series) {
       const ctx = canvas.getContext("2d");
       const isDark = document.body.classList.contains('dark');
 
-      // 銷毀舊圖避免重疊
       if (chartInstances.has(boardKey)) {
         chartInstances.get(boardKey).destroy();
         chartInstances.delete(boardKey);
       }
       if (!Array.isArray(series) || series.length === 0) return;
 
-      // [NEW] 動態判斷使用 eth_close 或 btc_close
+      // 動態判斷 eth_close / btc_close
       const sample = series.find(x => x && typeof x === "object") || {};
       const hasEth = Object.prototype.hasOwnProperty.call(sample, "eth_close");
       const hasBtc = Object.prototype.hasOwnProperty.call(sample, "btc_close");
-      const priceKey = hasEth ? "eth_close" : (hasBtc ? "btc_close" : null); // 僅在兩者之一存在時使用
-      const assetLabel = priceKey === "btc_close" ? "BTC" : "ETH"; // 預設 ETH
+      const priceKey = hasEth ? "eth_close" : (hasBtc ? "btc_close" : null);
+      const assetLabel = priceKey === "btc_close" ? "BTC" : "ETH";
 
       const labels = series.map(x => String(x.date));
       const equity  = series.map(x => Number(x.equity));
-      const price   = priceKey ? series.map(x => Number(x[priceKey])) : []; // [NEW]
+      const price   = priceKey ? series.map(x => Number(x[priceKey])) : [];
 
       const chart = new Chart(ctx, {
         type: "line",
@@ -395,7 +360,6 @@
           labels,
           datasets: [
             { label: "Equity", data: equity, yAxisID: "yEquity", tension: 0.25, pointRadius: 0, borderWidth: 2 },
-            // [MOD] 依 priceKey 切換名稱（ETH Close / BTC Close）
             { label: assetLabel + " Close", data: price, yAxisID: "yPrice", tension: 0.25, pointRadius: 0, borderWidth: 2 }
           ]
         },
@@ -427,7 +391,6 @@
             },
             yPrice: {
               type: "linear", position: "right",
-              // [MOD] 依資產切換 Y 軸標題
               title: { display: true, text: assetLabel, color: isDark ? "#e5e7eb" : "#0f172a" },
               ticks: { color: isDark ? "#cbd5e1" : "#334155" },
               grid:  { drawOnChartArea: false, color: isDark ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.2)" }
@@ -437,41 +400,35 @@
       });
       chartInstances.set(boardKey, chart);
 
-      // [NEW] 展開後，同步更新圖表標題與 meta，明確顯示使用的 price 欄位
       const wrap = canvas.closest(".chart-wrap");
       if (wrap) {
         const titleEl = wrap.querySelector(".chart-title");
         const metaEl  = wrap.querySelector(".chart-meta");
-        if (titleEl) {
-          // 原本是「資金曲線與 ETH 收盤」，現在改成動態資產
-          titleEl.textContent = titleEl.textContent.replace(/資金曲線與.*收盤/, `資金曲線與 ${assetLabel} 收盤`);
-        }
+        if (titleEl) titleEl.textContent = titleEl.textContent.replace(/資金曲線與.*收盤/, `資金曲線與 ${assetLabel} 收盤`);
         if (metaEl) {
           const old = metaEl.textContent || "";
           const info = priceKey ? `（price: ${priceKey}）` : `（price: 無對應欄位）`;
-          // 若已包含 price 提示就不重覆疊加
           if (!/（price:/.test(old)) metaEl.textContent = `${old} ${info}`.trim();
         }
       }
     }
 
-    // 主題切換時對已展開圖表重繪
     window.__rerenderOpenCharts = function() {
       for (const [boardKey] of chartInstances.entries()) {
         const canvas = document.getElementById(`canvas-${boardKey.replace(":","-")}`);
-        if (!canvas || canvas.closest(".chart-wrap").style.display === "none") continue;
+        if (!canvas) continue;
+        const tr = canvas.closest('tr.chart-row');
+        if (!tr || !tr.classList.contains('open')) continue;
         const series = chartSeriesCache.get(boardKey) || [];
         renderChartInto(boardKey, canvas, series);
       }
     };
 
-    // =====================================================
-    // 6) 渲染表格（數據列 + 圖表列；根據自動探索的 keys）
-    // =====================================================
     function renderTable(rowsByKey, seriesKeyByBoard, sortedBoardKeys) {
       tb.innerHTML = "";
       if (!sortedBoardKeys || sortedBoardKeys.length === 0) {
         const tr = document.createElement("tr");
+        tr.className = "data-row";
         const td = document.createElement("td");
         td.colSpan = 14; td.className = "muted"; td.textContent = "目前未發現可用的策略資料（board:*）。";
         tr.appendChild(td); tb.appendChild(tr);
@@ -483,7 +440,6 @@
         if (!row) continue;
         const { exchange, env } = decodeVenue(row.venue);
 
-        // 數據列
         const tr = document.createElement("tr"); tr.className = "data-row";
         tr.appendChild(tdNode(textNode(row.name || key)));
         tr.appendChild(tdNode(textNode(row.strategy)));
@@ -499,9 +455,8 @@
         tr.appendChild(tdNode(textNode(fmtISOToTPE(row.started_at))));
         tr.appendChild(tdNode(textNode(fmtISOToTPE(row.updated_at))));
 
-        // 查看曲線按鈕（僅在偵測到有效 series 時顯示）
         const tdBtn = document.createElement("td");
-        const sKey = seriesKeyByBoard.get(key); // 若不存在代表該 row 未找到可用序列
+        const sKey = seriesKeyByBoard.get(key);
         if (sKey) {
           const btn = document.createElement("button");
           btn.className = "btn small";
@@ -514,10 +469,9 @@
         tr.appendChild(tdBtn);
         tb.appendChild(tr);
 
-        // 圖表列（預設隱藏；只有存在有效 series 才建立）
         if (sKey) {
           const trChart = document.createElement("tr");
-          trChart.className = "chart-row";
+          trChart.className = "chart-row"; // [FIX] 預設 display:none，由 CSS 控制
           trChart.id = `chartrow-${key.replace(":","-")}`;
           const tdChart = document.createElement("td");
           tdChart.colSpan = 14;
@@ -527,7 +481,6 @@
 
           const title = document.createElement("div");
           title.className = "chart-title";
-          // [MOD] 先放通用標題，實際資產會在 renderChartInto 時動態替換
           title.textContent = `${row.name || key} — 資金曲線與 收盤`;
 
           const meta = document.createElement("div");
@@ -548,35 +501,29 @@
       }
     }
 
-    // ============================================
-    // 7) 展開/收起圖表列（首次展開使用快取資料）
-    // ============================================
+    // [FIX] 切換整行顯示狀態，只給頂部邊框，避免「直線」入侵上一行格子
     function toggleChartRow(boardKey) {
       const rowId = boardKey.replace(":","-");
       const chartTr = document.getElementById(`chartrow-${rowId}`);
       if (!chartTr) return;
 
-      const wrap = chartTr.querySelector(".chart-wrap");
-      const isVisible = wrap.style.display === "block";
-      if (isVisible) { wrap.style.display = "none"; return; }
+      if (chartTr.classList.contains('open')) {
+        chartTr.classList.remove('open');
+        return;
+      }
 
-      wrap.style.display = "block";
+      chartTr.classList.add('open');
       const canvas = chartTr.querySelector("canvas");
       const series = chartSeriesCache.get(boardKey) || [];
       renderChartInto(boardKey, canvas, series);
     }
 
-    // ============================================
-    // 8) 自動探索、拉取並渲染（定時刷新）
-    // ============================================
     async function pullAll() {
       try {
         setStatus(false, "資料同步中…");
 
-        // 8.1 掃描所有 board:* keys
         const boardKeys = await scanBoardKeys("board:*", 200);
 
-        // 8.2 拉取每個 board 的 row 資料並收集排序欄位
         const rowsByKey = new Map();
         const discovered = [];
         for (const k of boardKeys) {
@@ -591,7 +538,6 @@
           }
         }
 
-        // 8.3 排序：有 name 優先；再依 updated_at 新到舊；最後按 key
         discovered.sort((a,b) => {
           if (!!a.name !== !!b.name) return b.name ? 1 : -1;
           if (a.updated !== b.updated) return b.updated - a.updated;
@@ -599,8 +545,7 @@
         });
         const sortedBoardKeys = discovered.map(x => x.key);
 
-        // 8.4 探測每個 board 的 series（成功者快取 data 與 series key）
-        const seriesKeyByBoard = new Map(); // boardKey -> seriesKey
+        const seriesKeyByBoard = new Map();
         for (const k of sortedBoardKeys) {
           const row = rowsByKey.get(k);
           if (!row) continue;
@@ -615,7 +560,6 @@
           }
         }
 
-        // 8.5 渲染表格
         renderTable(rowsByKey, seriesKeyByBoard, sortedBoardKeys);
 
         setStatus(true, "服務正常");
@@ -626,6 +570,7 @@
         setStatus(false, "資料讀取失敗");
         tb.innerHTML = "";
         const tr = document.createElement("tr");
+        tr.className = "data-row";
         const td = document.createElement("td");
         td.colSpan = 14; td.className = "muted";
         td.textContent = "目前無法取得資料，請稍後重新整理或檢查網路／權限設定。";
