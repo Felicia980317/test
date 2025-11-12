@@ -7,100 +7,359 @@
 
   <style>
     :root {
-      --maxw: 1728px;
-      --bg: #ffffff;
+      --maxw: 1440px;
+      --bg: #f3f4f6;
       --fg: #0f172a;
-      --muted: #64748b;
+      --muted: #6b7280;
       --card: #ffffff;
       --card-border: #e5e7eb;
       --accent: #0ea5e9;
-      --thead: #f6f8fa;
-      --row-alt: #fafafa;
-      --hover: #f1f5f9;
-      --ok-bg: #e6ffed; --ok-bd: #86efac;
-      --err-bg: #ffe6e6; --err-bd: #f5c2c7;
+      --accent-soft: #e0f2fe;
+      --thead: #f9fafb;
+      --row-alt: #f9fafb;
+      --hover: #eff6ff;
+      --ok-bg: #ecfdf3;
+      --ok-bd: #22c55e;
+      --err-bg: #fef2f2;
+      --err-bd: #f97373;
     }
     body.dark {
-      --bg: #0b1220;
+      --bg: #020617;
       --fg: #e5e7eb;
       --muted: #94a3b8;
-      --card: #121a2b;
-      --card-border: #1f2a44;
+      --card: #020617;
+      --card-border: #1f2937;
       --accent: #38bdf8;
-      --thead: #101828;
-      --row-alt: #0f172a;
-      --hover: #0b3753;
+      --accent-soft: #0f172a;
+      --thead: #020617;
+      --row-alt: #020617;
+      --hover: #111827;
     }
 
     html, body { height: 100%; }
-    body {
-      margin: 0; padding: 24px;
-      background: var(--bg); color: var(--fg);
-      font-family: ui-sans-serif, system-ui, "Segoe UI", -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei";
-    }
-    .wrap { max-width: var(--maxw); margin: 0 auto; }
 
-    .topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px; }
-    .title { font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }
-    .toolbar { display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
-    .btn, select {
-      padding:8px 10px; border:1px solid var(--card-border); border-radius: 8px;
-      background: var(--card); color: var(--fg); cursor: pointer;
+    body {
+      margin: 0;
+      padding: 24px 32px 32px;
+      background:
+        radial-gradient(circle at 0% 0%, #e0f2fe 0, #f9fafb 35%, #f3f4f6 100%);
+      color: var(--fg);
+      font-family: ui-sans-serif, system-ui, "Segoe UI", -apple-system,
+        "Noto Sans TC", "PingFang TC", "Microsoft JhengHei";
     }
-    .btn.small { font-size: 12px; padding:6px 8px; }
-    .btn:hover { filter: brightness(1.05); }
+    body.dark {
+      background:
+        radial-gradient(circle at 0% 0%, #0b1120 0, #020617 45%, #020617 100%);
+    }
+
+    .wrap {
+      max-width: var(--maxw);
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .title span.sub {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: var(--accent-soft);
+    }
+    body.dark .title span.sub {
+      background: #0b1120;
+      color: #9ca3af;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn,
+    select {
+      padding: 8px 12px;
+      border-radius: 9999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: #0f172a;
+      color: #f9fafb;
+      cursor: pointer;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.2;
+      transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+    }
+    .btn.small {
+      font-size: 11px;
+      padding: 6px 10px;
+      box-shadow: none;
+    }
+    select {
+      background: var(--card);
+      color: var(--fg);
+      box-shadow: none;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.25);
+      filter: brightness(1.05);
+    }
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+    }
+
     .chip {
-      display:inline-block; padding: 4px 10px; border-radius: 9999px; border:1px solid var(--card-border);
-      font-size: 12px; line-height: 1.2; background: var(--card);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      border: 1px solid var(--card-border);
+      font-size: 11px;
+      line-height: 1.2;
+      background: var(--card);
+      color: var(--muted);
     }
-    #status { background: var(--err-bg); border-color: var(--err-bd); }
-    #status.ok { background: var(--ok-bg); border-color: var(--ok-bd); }
-    #lastRefresh { color: var(--muted); font-size: 12px; }
+    #status {
+      background: var(--err-bg);
+      border-color: var(--err-bd);
+      color: #b91c1c;
+      font-weight: 500;
+    }
+    #status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      background: #ef4444;
+      box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2);
+    }
+    #status.ok {
+      background: var(--ok-bg);
+      border-color: var(--ok-bd);
+      color: #15803d;
+    }
+    #status.ok::before {
+      background: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+    }
+    #lastRefresh {
+      color: var(--muted);
+      font-size: 11px;
+    }
 
     .card {
-      border:1px solid var(--card-border); border-radius: 12px; background: var(--card);
-      padding: 14px; margin: 12px 0 20px;
+      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow:
+        0 20px 45px rgba(15, 23, 42, 0.08),
+        0 1px 0 rgba(255, 255, 255, 0.6);
+      padding: 16px 18px 18px;
+      margin: 12px 0 20px;
     }
-    .card-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
-    .card-title { font-weight:600; }
-    #tv_chart { width: 100%; height: 420px; }
+    body.dark .card {
+      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.6);
+    }
 
-    table { border-collapse: collapse; width: 100%; }
-    thead th { position: sticky; top: 0; background: var(--thead); z-index: 1; color: var(--fg); }
-    th, td { border: 1px solid var(--card-border); padding: 10px; text-align: center; }
-    /* [FIX] 原本的 nth-child 選到子元素，這裡直接套 tr 本身 */
-    tbody tr.data-row:nth-of-type(odd) td { background: var(--row-alt); }
-    tbody tr.data-row:hover td { background: var(--hover); }
-    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+    }
+    .card-title {
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-title::before {
+      content: "";
+      width: 6px;
+      height: 20px;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, #0ea5e9, #22c55e);
+    }
 
-    /* [FIX] 圖表行的顯示與邊框：預設整行隱藏；展開時只保留頂部邊框，去掉左右邊框以免直線滲入上一行格子 */
+    #tv_chart {
+      width: 100%;
+      height: 420px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--card);
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--thead);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    th, td {
+      border: 1px solid var(--card-border);
+      padding: 9px 10px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    /* 左靠欄位（名稱／策略／標的） */
+    tbody td:first-child,
+    tbody td:nth-child(2),
+    tbody td:nth-child(3) {
+      text-align: left;
+    }
+
+    td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 一般列交錯底色 + hover */
+    tbody tr.data-row:nth-of-type(odd) td {
+      background: var(--row-alt);
+    }
+    tbody tr.data-row:hover td {
+      background: var(--hover);
+    }
+
+    /* 不活躍列：整列灰底（覆蓋交錯底色） */
+    tbody tr.data-row.row-stale td {
+      background: #f3f4f6;
+    }
+    tbody tr.data-row.row-stale:hover td {
+      background: #e5e7eb;
+    }
+    body.dark tbody tr.data-row.row-stale td {
+      background: #111827;
+    }
+    body.dark tbody tr.data-row.row-stale:hover td {
+      background: #020617;
+    }
+
+    /* 回測圖表列顯示控制 */
     tr.chart-row { display: none; }
     tr.chart-row.open { display: table-row; }
     tr.chart-row > td {
       background: var(--card);
       border-top: 1px solid var(--card-border);
       border-bottom: 0;
-      border-left: 0;   /* 關鍵：去掉左右邊框，避免「直線」出現在上一行某欄位內 */
-      border-right: 0;  /* 關鍵 */
+      border-left: 0;
+      border-right: 0;
       padding-top: 6px;
     }
 
-    .badge { display:inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 12px; line-height: 1.6; border: 1px solid var(--card-border); }
-    .badge.live { background: #e6ffed; border-color: #86efac; }
-    .badge.paper { background: #e0f2fe; border-color: #93c5fd; }
-    .badge.backtest { background: #fff7ed; border-color: #fdba74; }
-    body.dark .badge.live { background:#0f3b2a; border-color:#16a4a4; }
-    body.dark .badge.paper { background:#0e1f33; border-color:#60a5fa; }
-    body.dark .badge.backtest { background:#3a2a10; border-color:#fb923c; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      line-height: 1.6;
+      border: 1px solid var(--card-border);
+      background: #f9fafb;
+      color: #0f172a;
+    }
+    .badge.live {
+      background: #ecfdf3;
+      border-color: #4ade80;
+      color: #166534;
+    }
+    .badge.paper {
+      background: #eff6ff;
+      border-color: #93c5fd;
+      color: #1d4ed8;
+    }
+    .badge.backtest {
+      background: #fff7ed;
+      border-color: #fdba74;
+      color: #9a3412;
+    }
+    body.dark .badge.live {
+      background: #052e16;
+      border-color: #22c55e;
+      color: #bbf7d0;
+    }
+    body.dark .badge.paper {
+      background: #0b1120;
+      border-color: #60a5fa;
+      color: #bfdbfe;
+    }
+    body.dark .badge.backtest {
+      background: #3a2a10;
+      border-color: #fb923c;
+      color: #fed7aa;
+    }
 
-    .pct.pos { color: #10b981; }
+    .pct.pos { color: #16a34a; }
     .pct.neg { color: #ef4444; }
     .muted { color: var(--muted); }
 
-    .chart-wrap { padding: 8px 6px; }
-    .chart-title { text-align:left; font-weight:600; margin-bottom:8px; }
-    .chart-meta { text-align:left; font-size:12px; color: var(--muted); margin-bottom:6px; }
-    .chart-canvas { width:100%; height:320px; }
+    /* 更新時間顏色差異（7 天內 / 7 天以上） */
+    .updated-active { color: #16a34a; font-weight: 500; }
+    .updated-stale  { color: #f97316; }
+    body.dark .updated-active { color: #4ade80; }
+    body.dark .updated-stale  { color: #fdba74; }
+
+    .chart-wrap {
+      padding: 8px 4px 4px;
+    }
+    .chart-title {
+      text-align: left;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .chart-meta {
+      text-align: left;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .chart-canvas {
+      width: 100%;
+      height: 320px;
+    }
   </style>
 
   <script src="https://s3.tradingview.com/tv.js"></script>
@@ -109,7 +368,10 @@
 <body>
   <div class="wrap">
     <div class="topbar">
-      <div class="title">策略看板</div>
+      <div class="title">
+        策略看板
+        <span class="sub">ETH 量化策略監控</span>
+      </div>
       <div class="toolbar">
         <span id="status" class="chip" aria-live="polite">初始化</span>
         <span id="lastRefresh" class="chip">—</span>
@@ -143,15 +405,15 @@
       <table aria-label="策略清單">
         <thead>
           <tr>
-            <th style="width:140px;">名稱</th>
+            <th style="width:160px;">名稱</th>
             <th>策略</th>
             <th>標的</th>
             <th>運行模式</th>
             <th>交易所</th>
-            <th>環境</th>
+            <th>槓桿</th>
+            <th>方向</th>
             <th>7天收益率</th>
             <th>30天收益率</th>
-            <th>總收益率</th>
             <th>線性年化報酬率<br>(依據總收益)</th>
             <th>最大回撤</th>
             <th>起始時間</th>
@@ -182,7 +444,8 @@
         const next = document.body.classList.contains('dark') ? 'light' : 'dark';
         applyTheme(next);
       });
-      applyTheme('light');
+      // 預設維持淺色主題
+      applyTheme('dark');
       window.__applyTheme = applyTheme;
     })();
 
@@ -239,6 +502,7 @@
       statusEl.className = ok ? "chip ok" : "chip";
       statusEl.textContent = text;
     }
+
     function fmtPercentNode(x) {
       const span = document.createElement("span");
       const n = Number(x);
@@ -248,7 +512,20 @@
       span.className = val > 0 ? "pct pos" : (val < 0 ? "pct neg" : "pct");
       return span;
     }
-    function textNode(s) { const span = document.createElement("span"); span.textContent = (s ?? "-"); return span; }
+
+    function fmtPercentText(x) {
+      const n = Number(x);
+      if (!isFinite(n)) return "-";
+      const val = n * 100;
+      return val.toFixed(2) + "%";
+    }
+
+    function textNode(s) {
+      const span = document.createElement("span");
+      span.textContent = (s ?? "-");
+      return span;
+    }
+
     function fmtISOToTPE(iso) {
       if (typeof iso !== "string" || !iso) return "-";
       const d = new Date(iso);
@@ -256,10 +533,32 @@
       const f = new Intl.DateTimeFormat("zh-Hant", {
         timeZone: "Asia/Taipei",
         year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit"
+        hour: "2-digit", minute: "2-digit",
+        hour12: false
       });
       return f.format(d);
     }
+
+    function fmtISOToTPEDate(iso) {
+      if (typeof iso !== "string" || !iso) return "-";
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      const f = new Intl.DateTimeFormat("zh-Hant", {
+        timeZone: "Asia/Taipei",
+        year: "numeric", month: "2-digit", day: "2-digit"
+      });
+      return f.format(d);
+    }
+
+    function isRecentUpdate(iso) {
+      if (typeof iso !== "string" || !iso) return false;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return false;
+      const diff = Date.now() - d.getTime();
+      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+      return diff <= sevenDaysMs;
+    }
+
     function decodeVenue(venueStr) {
       if (typeof venueStr !== "string" || !venueStr) return { exchange: "-", env: "-" };
       const [exchange, envRaw] = venueStr.split(".");
@@ -267,14 +566,38 @@
       const envLabel = env === "testnet" ? "測試網" : "主網";
       return { exchange: exchange || "-", env: envLabel };
     }
+
+    function fmtLeverage(val) {
+      if (val === null || val === undefined || val === "") return "-";
+      const n = Number(val);
+      if (!isFinite(n)) return "-";
+      return String(Math.round(n));
+    }
+
+    function fmtDirection(dir) {
+      const s = String(dir || "").toLowerCase();
+      if (!s) return "-";
+      if (s === "long") return "買多";
+      if (s === "short") return "賣空";
+      return dir;
+    }
+
     function modeBadge(mode) {
       const m = String(mode || "").toLowerCase();
-      const map = { live: "實盤", paper: "模擬", backtest: "回測" };
+      const map = {
+        live: "實盤",
+        "server.live": "伺服實盤",
+        paper: "模擬",
+        backtest: "回測"
+      };
       const span = document.createElement("span");
-      span.className = "badge " + (m || "default");
+      let cls = m || "default";
+      if (m === "server.live") cls = "live";
+      span.className = "badge " + cls;
       span.textContent = map[m] || m || "-";
       return span;
     }
+
     function tdNode(child, className) {
       const td = document.createElement("td");
       if (className) td.className = className;
@@ -284,7 +607,10 @@
 
     async function upstashGet(pathWithArgs) {
       const url = `${REST_URL}/${pathWithArgs}`;
-      const res = await fetch(url, { headers: { "Authorization": `Bearer ${READ_TOKEN}` }, cache: "no-store" });
+      const res = await fetch(url, {
+        headers: { "Authorization": `Bearer ${READ_TOKEN}` },
+        cache: "no-store"
+      });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       return res.json();
     }
@@ -293,11 +619,17 @@
       let cursor = "0";
       const all = [];
       do {
-        const j = await upstashGet(`scan/${cursor}?MATCH=${encodeURIComponent(match)}&COUNT=${pageCount}`);
-        if (!j || !Array.isArray(j.result) || j.result.length !== 2) throw new Error("SCAN 回傳格式異常");
+        const j = await upstashGet(
+          `scan/${cursor}?MATCH=${encodeURIComponent(match)}&COUNT=${pageCount}`
+        );
+        if (!j || !Array.isArray(j.result) || j.result.length !== 2) {
+          throw new Error("SCAN 回傳格式異常");
+        }
         cursor = String(j.result[0]);
         const batch = j.result[1];
-        if (Array.isArray(batch)) for (const k of batch) if (typeof k === "string") all.push(k);
+        if (Array.isArray(batch)) {
+          for (const k of batch) if (typeof k === "string") all.push(k);
+        }
       } while (cursor !== "0");
       return all;
     }
@@ -305,7 +637,12 @@
     async function fetchKeyJSON(key) {
       const j = await upstashGet(`get/${encodeURIComponent(key)}`);
       if (!j || typeof j.result !== "string") throw new Error("GET 回傳格式異常");
-      let row; try { row = JSON.parse(j.result); } catch { throw new Error("JSON 解析失敗"); }
+      let row;
+      try {
+        row = JSON.parse(j.result);
+      } catch {
+        throw new Error("JSON 解析失敗");
+      }
       if (typeof row !== "object" || !row) throw new Error("資料內容不正確");
       return row;
     }
@@ -313,14 +650,23 @@
     async function fetchSeriesJSON(seriesKey) {
       const j = await upstashGet(`get/${encodeURIComponent(seriesKey)}`);
       if (!j || typeof j.result !== "string") throw new Error("GET 回傳格式異常");
-      let arr; try { arr = JSON.parse(j.result); } catch { throw new Error("JSON 解析失敗"); }
+      let arr;
+      try {
+        arr = JSON.parse(j.result);
+      } catch {
+        throw new Error("JSON 解析失敗");
+      }
       if (!Array.isArray(arr)) throw new Error("序列資料型態錯誤");
       return arr;
     }
 
     async function resolveSeriesForBoard(boardKey, rowObj) {
       if (rowObj && typeof rowObj.series_key === "string" && rowObj.series_key) {
-        return { key: rowObj.series_key, available: true, data: await fetchSeriesJSON(rowObj.series_key) };
+        return {
+          key: rowObj.series_key,
+          available: true,
+          data: await fetchSeriesJSON(rowObj.series_key)
+        };
       }
       const custom = String(boardKey).slice("board:".length);
       const candidates = [`series:${custom}:equity`, `series:${custom}:equity30d`];
@@ -343,7 +689,6 @@
       }
       if (!Array.isArray(series) || series.length === 0) return;
 
-      // 動態判斷 eth_close / btc_close
       const sample = series.find(x => x && typeof x === "object") || {};
       const hasEth = Object.prototype.hasOwnProperty.call(sample, "eth_close");
       const hasBtc = Object.prototype.hasOwnProperty.call(sample, "btc_close");
@@ -359,15 +704,32 @@
         data: {
           labels,
           datasets: [
-            { label: "Equity", data: equity, yAxisID: "yEquity", tension: 0.25, pointRadius: 0, borderWidth: 2 },
-            { label: assetLabel + " Close", data: price, yAxisID: "yPrice", tension: 0.25, pointRadius: 0, borderWidth: 2 }
+            {
+              label: "Equity",
+              data: equity,
+              yAxisID: "yEquity",
+              tension: 0.25,
+              pointRadius: 0,
+              borderWidth: 2
+            },
+            {
+              label: assetLabel + " Close",
+              data: price,
+              yAxisID: "yPrice",
+              tension: 0.25,
+              pointRadius: 0,
+              borderWidth: 2
+            }
           ]
         },
         options: {
           responsive: true,
           interaction: { mode: "index", intersect: false },
           plugins: {
-            legend: { display: true, labels: { color: isDark ? "#e5e7eb" : "#0f172a" } },
+            legend: {
+              display: true,
+              labels: { color: isDark ? "#e5e7eb" : "#0f172a" }
+            },
             tooltip: {
               callbacks: {
                 label: function(ctx) {
@@ -380,20 +742,48 @@
           },
           scales: {
             x: {
-              ticks: { color: isDark ? "#cbd5e1" : "#334155", maxRotation: 0, autoSkip: true, maxTicksLimit: 10 },
-              grid:  { color: isDark ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.2)" }
+              ticks: {
+                color: isDark ? "#cbd5e1" : "#334155",
+                maxRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: 10
+              },
+              grid: {
+                color: isDark
+                  ? "rgba(148,163,184,0.2)"
+                  : "rgba(148,163,184,0.2)"
+              }
             },
             yEquity: {
-              type: "linear", position: "left",
-              title: { display: true, text: "Equity", color: isDark ? "#e5e7eb" : "#0f172a" },
+              type: "linear",
+              position: "left",
+              title: {
+                display: true,
+                text: "Equity",
+                color: isDark ? "#e5e7eb" : "#0f172a"
+              },
               ticks: { color: isDark ? "#cbd5e1" : "#334155" },
-              grid:  { color: isDark ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.2)" }
+              grid: {
+                color: isDark
+                  ? "rgba(148,163,184,0.2)"
+                  : "rgba(148,163,184,0.2)"
+              }
             },
             yPrice: {
-              type: "linear", position: "right",
-              title: { display: true, text: assetLabel, color: isDark ? "#e5e7eb" : "#0f172a" },
+              type: "linear",
+              position: "right",
+              title: {
+                display: true,
+                text: assetLabel,
+                color: isDark ? "#e5e7eb" : "#0f172a"
+              },
               ticks: { color: isDark ? "#cbd5e1" : "#334155" },
-              grid:  { drawOnChartArea: false, color: isDark ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.2)" }
+              grid: {
+                drawOnChartArea: false,
+                color: isDark
+                  ? "rgba(148,163,184,0.2)"
+                  : "rgba(148,163,184,0.2)"
+              }
             }
           }
         }
@@ -404,10 +794,17 @@
       if (wrap) {
         const titleEl = wrap.querySelector(".chart-title");
         const metaEl  = wrap.querySelector(".chart-meta");
-        if (titleEl) titleEl.textContent = titleEl.textContent.replace(/資金曲線與.*收盤/, `資金曲線與 ${assetLabel} 收盤`);
+        if (titleEl) {
+          titleEl.textContent = titleEl.textContent.replace(
+            /資金曲線與.*收盤/,
+            `資金曲線與 ${assetLabel} 收盤`
+          );
+        }
         if (metaEl) {
           const old = metaEl.textContent || "";
-          const info = priceKey ? `（price: ${priceKey}）` : `（price: 無對應欄位）`;
+          const info = priceKey
+            ? `（price: ${priceKey}）`
+            : `（price: 無對應欄位）`;
           if (!/（price:/.test(old)) metaEl.textContent = `${old} ${info}`.trim();
         }
       }
@@ -430,30 +827,55 @@
         const tr = document.createElement("tr");
         tr.className = "data-row";
         const td = document.createElement("td");
-        td.colSpan = 14; td.className = "muted"; td.textContent = "目前未發現可用的策略資料（board:*）。";
-        tr.appendChild(td); tb.appendChild(tr);
+        td.colSpan = 14;
+        td.className = "muted";
+        td.textContent = "目前未發現可用的策略資料（board:*）。";
+        tr.appendChild(td);
+        tb.appendChild(tr);
         return;
       }
 
       for (const key of sortedBoardKeys) {
         const row = rowsByKey.get(key);
         if (!row) continue;
-        const { exchange, env } = decodeVenue(row.venue);
+        const { exchange } = decodeVenue(row.venue);
 
-        const tr = document.createElement("tr"); tr.className = "data-row";
+        const tr = document.createElement("tr");
+        tr.className = "data-row";
+
         tr.appendChild(tdNode(textNode(row.name || key)));
         tr.appendChild(tdNode(textNode(row.strategy)));
         tr.appendChild(tdNode(textNode(row.symbol)));
         tr.appendChild(tdNode(modeBadge(row.run_mode)));
         tr.appendChild(tdNode(textNode(exchange)));
-        tr.appendChild(tdNode(textNode(env)));
+        tr.appendChild(tdNode(textNode(fmtLeverage(row.leverage)), "num"));
+        tr.appendChild(tdNode(textNode(fmtDirection(row.direction))));
         tr.appendChild(tdNode(fmtPercentNode(row.return_7d), "num"));
         tr.appendChild(tdNode(fmtPercentNode(row.return_30d), "num"));
-        tr.appendChild(tdNode(fmtPercentNode(row.return_total), "num"));
-        tr.appendChild(tdNode(fmtPercentNode(row.annualized_return), "num"));
+
+        const annualTd = tdNode(fmtPercentNode(row.annualized_return), "num");
+        const totalText = fmtPercentText(row.return_total);
+        annualTd.title = totalText === "-"
+          ? "總收益率：資料缺失"
+          : `總收益率：${totalText}`;
+        tr.appendChild(annualTd);
+
         tr.appendChild(tdNode(fmtPercentNode(row.max_drawdown), "num"));
-        tr.appendChild(tdNode(textNode(fmtISOToTPE(row.started_at))));
-        tr.appendChild(tdNode(textNode(fmtISOToTPE(row.updated_at))));
+        tr.appendChild(tdNode(textNode(fmtISOToTPEDate(row.started_at))));
+
+        const updatedStr = fmtISOToTPE(row.updated_at);
+        const updatedSpan = document.createElement("span");
+        updatedSpan.textContent = updatedStr;
+        const recent = isRecentUpdate(row.updated_at);
+        updatedSpan.className = recent ? "updated-active" : "updated-stale";
+        updatedSpan.title = recent
+          ? "最近 7 天內有更新（視為活躍策略）"
+          : "已超過 7 天未更新（視為不活躍策略）";
+        tr.appendChild(tdNode(updatedSpan));
+
+        if (!recent) {
+          tr.classList.add("row-stale");
+        }
 
         const tdBtn = document.createElement("td");
         const sKey = seriesKeyByBoard.get(key);
@@ -471,7 +893,7 @@
 
         if (sKey) {
           const trChart = document.createElement("tr");
-          trChart.className = "chart-row"; // [FIX] 預設 display:none，由 CSS 控制
+          trChart.className = "chart-row";
           trChart.id = `chartrow-${key.replace(":","-")}`;
           const tdChart = document.createElement("td");
           tdChart.colSpan = 14;
@@ -501,7 +923,6 @@
       }
     }
 
-    // [FIX] 切換整行顯示狀態，只給頂部邊框，避免「直線」入侵上一行格子
     function toggleChartRow(boardKey) {
       const rowId = boardKey.replace(":","-");
       const chartTr = document.getElementById(`chartrow-${rowId}`);
@@ -531,14 +952,16 @@
             const row = await fetchKeyJSON(k);
             rowsByKey.set(k, row);
             const name = (row && row.name) ? String(row.name) : "";
-            const updated = (row && row.updated_at) ? Date.parse(row.updated_at) : 0;
+            const updated = (row && row.updated_at)
+              ? Date.parse(row.updated_at)
+              : 0;
             discovered.push({ key: k, name, updated });
           } catch (e) {
             console.warn("[board 讀取失敗]", k, e);
           }
         }
 
-        discovered.sort((a,b) => {
+        discovered.sort((a, b) => {
           if (!!a.name !== !!b.name) return b.name ? 1 : -1;
           if (a.updated !== b.updated) return b.updated - a.updated;
           return a.key.localeCompare(b.key);
@@ -550,7 +973,8 @@
           const row = rowsByKey.get(k);
           if (!row) continue;
           try {
-            const { key: sKey, available, data } = await resolveSeriesForBoard(k, row);
+            const { key: sKey, available, data } =
+              await resolveSeriesForBoard(k, row);
             if (available) {
               seriesKeyByBoard.set(k, sKey);
               chartSeriesCache.set(k, data);
@@ -563,7 +987,8 @@
         renderTable(rowsByKey, seriesKeyByBoard, sortedBoardKeys);
 
         setStatus(true, "服務正常");
-        lastRefreshEl.textContent = "最後更新：" + new Date().toLocaleString("zh-TW", { hour12:false });
+        lastRefreshEl.textContent = "最後更新：" +
+          new Date().toLocaleString("zh-TW", { hour12:false });
 
       } catch (e) {
         console.error(e);
@@ -572,9 +997,11 @@
         const tr = document.createElement("tr");
         tr.className = "data-row";
         const td = document.createElement("td");
-        td.colSpan = 14; td.className = "muted";
+        td.colSpan = 14;
+        td.className = "muted";
         td.textContent = "目前無法取得資料，請稍後重新整理或檢查網路／權限設定。";
-        tr.appendChild(td); tb.appendChild(tr);
+        tr.appendChild(td);
+        tb.appendChild(tr);
       }
     }
 
