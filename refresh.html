@@ -113,19 +113,25 @@
       padding: 6px 10px;
       box-shadow: none;
     }
-    select {
-      background: var(--card);
-      color: var(--fg);
-      box-shadow: none;
-    }
-    .btn:hover {
+    .btn:hover:enabled {
       transform: translateY(-1px);
       box-shadow: 0 12px 26px rgba(15, 23, 42, 0.25);
       filter: brightness(1.05);
     }
-    .btn:active {
+    .btn:active:enabled {
       transform: translateY(0);
       box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+    select {
+      background: var(--card);
+      color: var(--fg);
+      box-shadow: none;
     }
 
     .chip {
@@ -227,11 +233,11 @@
       z-index: 1;
       background: var(--thead);
       color: var(--muted);
-      font-size: 13px;
+      font-size: 13px;             /* 表頭字體加大 */
       font-weight: 600;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      padding: 10px 10px;
+      padding: 12px 10px;
       border-bottom: 1px solid var(--card-border);
     }
 
@@ -262,7 +268,7 @@
       background: var(--hover);
     }
 
-    /* 不活躍列：整列灰底（覆蓋交錯底色） */
+    /* 不活躍列：整列灰底（展開時用） */
     tbody tr.data-row.row-stale td {
       background: #f3f4f6;
     }
@@ -341,6 +347,24 @@
     body.dark .updated-active { color: #4ade80; }
     body.dark .updated-stale  { color: #fdba74; }
 
+    /* 不活躍標籤 */
+    .inactive-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 6px;
+      border-radius: 9999px;
+      border: 1px solid #d1d5db;
+      font-size: 10px;
+      margin-left: 4px;
+      color: #6b7280;
+      background: #f9fafb;
+    }
+    body.dark .inactive-pill {
+      border-color: #374151;
+      background: #020617;
+      color: #9ca3af;
+    }
+
     .chart-wrap {
       padding: 8px 4px 4px;
     }
@@ -375,7 +399,7 @@
       <div class="toolbar">
         <span id="status" class="chip" aria-live="polite">初始化</span>
         <span id="lastRefresh" class="chip">—</span>
-        <button id="themeToggle" class="btn" type="button" title="切換明/暗">切換深色</button>
+        <button id="themeToggle" class="btn" type="button" title="切換明/暗">切換淺色</button>
       </div>
     </div>
 
@@ -400,7 +424,12 @@
     <div class="card">
       <div class="card-head">
         <div class="card-title">策略列表</div>
-        <div class="muted">資料來源：Upstash（自動探索 board:*）</div>
+        <div class="toolbar">
+          <span class="muted">資料來源：Upstash（自動探索 board:*）</span>
+          <button id="toggleInactive" class="btn small" type="button" disabled>
+            無不活躍策略
+          </button>
+        </div>
       </div>
       <table aria-label="策略清單">
         <thead>
@@ -444,7 +473,7 @@
         const next = document.body.classList.contains('dark') ? 'light' : 'dark';
         applyTheme(next);
       });
-      // 預設維持淺色主題
+      // 預設深色主題
       applyTheme('dark');
       window.__applyTheme = applyTheme;
     })();
@@ -494,9 +523,11 @@
     const tb = document.getElementById("tb");
     const statusEl = document.getElementById("status");
     const lastRefreshEl = document.getElementById("lastRefresh");
+    const inactiveToggleBtn = document.getElementById("toggleInactive");
 
     const chartInstances = new Map();
     const chartSeriesCache = new Map();
+    let showInactive = true;
 
     function setStatus(ok, text) {
       statusEl.className = ok ? "chip ok" : "chip";
@@ -821,6 +852,36 @@
       }
     };
 
+    function updateInactiveToggleLabel(count) {
+      if (!inactiveToggleBtn) return;
+      inactiveToggleBtn.dataset.inactiveCount = String(count);
+      if (count === 0) {
+        inactiveToggleBtn.textContent = "無不活躍策略";
+        inactiveToggleBtn.disabled = true;
+        return;
+      }
+      inactiveToggleBtn.disabled = false;
+      inactiveToggleBtn.textContent = showInactive
+        ? `隱藏不活躍策略 (${count})`
+        : `顯示不活躍策略 (${count})`;
+    }
+
+    function applyInactiveVisibility() {
+      const rows = tb.querySelectorAll("tr.data-row.row-stale");
+      rows.forEach(tr => {
+        tr.style.display = showInactive ? "" : "none";
+      });
+    }
+
+    if (inactiveToggleBtn) {
+      inactiveToggleBtn.addEventListener("click", () => {
+        showInactive = !showInactive;
+        const count = Number(inactiveToggleBtn.dataset.inactiveCount || "0");
+        updateInactiveToggleLabel(count);
+        applyInactiveVisibility();
+      });
+    }
+
     function renderTable(rowsByKey, seriesKeyByBoard, sortedBoardKeys) {
       tb.innerHTML = "";
       if (!sortedBoardKeys || sortedBoardKeys.length === 0) {
@@ -832,8 +893,11 @@
         td.textContent = "目前未發現可用的策略資料（board:*）。";
         tr.appendChild(td);
         tb.appendChild(tr);
+        updateInactiveToggleLabel(0);
         return;
       }
+
+      let inactiveCount = 0;
 
       for (const key of sortedBoardKeys) {
         const row = rowsByKey.get(key);
@@ -871,11 +935,21 @@
         updatedSpan.title = recent
           ? "最近 7 天內有更新（視為活躍策略）"
           : "已超過 7 天未更新（視為不活躍策略）";
-        tr.appendChild(tdNode(updatedSpan));
+
+        const updatedTd = document.createElement("td");
+        updatedTd.appendChild(updatedSpan);
 
         if (!recent) {
+          const pill = document.createElement("span");
+          pill.className = "inactive-pill";
+          pill.textContent = "不活躍";
+          updatedTd.appendChild(document.createTextNode(" "));
+          updatedTd.appendChild(pill);
           tr.classList.add("row-stale");
+          inactiveCount++;
         }
+
+        tr.appendChild(updatedTd);
 
         const tdBtn = document.createElement("td");
         const sKey = seriesKeyByBoard.get(key);
@@ -921,6 +995,9 @@
           tb.appendChild(trChart);
         }
       }
+
+      updateInactiveToggleLabel(inactiveCount);
+      applyInactiveVisibility();
     }
 
     function toggleChartRow(boardKey) {
@@ -1002,6 +1079,7 @@
         td.textContent = "目前無法取得資料，請稍後重新整理或檢查網路／權限設定。";
         tr.appendChild(td);
         tb.appendChild(tr);
+        updateInactiveToggleLabel(0);
       }
     }
 
