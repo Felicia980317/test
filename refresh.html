@@ -7,7 +7,7 @@
 
   <style>
     :root {
-      --maxw: 1440px;
+      --maxw: 1600px;
       --bg: #f3f4f6;
       --fg: #0f172a;
       --muted: #6b7280;
@@ -340,6 +340,20 @@
     .pct.pos { color: #16a34a; }
     .pct.neg { color: #ef4444; }
     .muted { color: var(--muted); }
+    .dir-long {
+      color: #22c55e;
+      font-weight: 600;
+    }
+    .dir-short {
+      color: #ef4444;
+      font-weight: 600;
+    }
+    body.dark .dir-long {
+      color: #4ade80;
+    }
+    body.dark .dir-short {
+      color: #fca5a5;
+    }
 
     /* 更新時間顏色差異（7 天內 / 7 天以上） */
     .updated-active { color: #16a34a; font-weight: 500; }
@@ -608,15 +622,14 @@
     function fmtDirection(dir) {
       const s = String(dir || "").toLowerCase();
       if (!s) return "-";
-      if (s === "long") return "買多";
-      if (s === "short") return "賣空";
+      if (s === "long") return "Long";
+      if (s === "short") return "Short";
       return dir;
     }
-
     function modeBadge(mode) {
       const m = String(mode || "").toLowerCase();
       const map = {
-        live: "實盤",
+        live: "個人實盤",
         "server.live": "伺服實盤",
         paper: "模擬",
         backtest: "回測"
@@ -913,7 +926,17 @@
         tr.appendChild(tdNode(modeBadge(row.run_mode)));
         tr.appendChild(tdNode(textNode(exchange)));
         tr.appendChild(tdNode(textNode(fmtLeverage(row.leverage)), "num"));
-        tr.appendChild(tdNode(textNode(fmtDirection(row.direction))));
+        const dirText = fmtDirection(row.direction);
+        const dirSpan = document.createElement("span");
+        dirSpan.textContent = dirText;
+
+        if (dirText === "Long") {
+          dirSpan.className = "dir-long";
+        } else if (dirText === "Short") {
+          dirSpan.className = "dir-short";
+        }
+
+        tr.appendChild(tdNode(dirSpan));
         tr.appendChild(tdNode(fmtPercentNode(row.return_7d), "num"));
         tr.appendChild(tdNode(fmtPercentNode(row.return_30d), "num"));
 
