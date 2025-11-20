@@ -337,6 +337,17 @@
       text-align: left;
     }
 
+    /* === 新增：note 顯示樣式 === */
+    th.note-col { width: 100px; }
+    td.note-cell {
+      text-align: left;
+      white-space: pre-wrap;     /* 支援換行 */
+      word-break: break-word;    /* 長字切斷 */
+      line-height: 1.45;
+      font-size: 12px;
+      vertical-align: top;
+    }
+
     td.num {
       text-align: right;
       font-variant-numeric: tabular-nums;
@@ -571,11 +582,13 @@
             <th>最大回撤</th>
             <th>起始時間</th>
             <th>更新時間</th>
+            <!-- === 新增 note 欄位 === -->
+            <th class="note-col">備註</th>
             <th style="width:110px;">回測圖表</th>
           </tr>
         </thead>
         <tbody id="tb">
-          <tr><td class="muted" colspan="14">資料載入中…</td></tr>
+          <tr><td class="muted" colspan="15">資料載入中…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1055,7 +1068,7 @@
         const tr = document.createElement("tr");
         tr.className = "data-row";
         const td = document.createElement("td");
-        td.colSpan = 14;
+        td.colSpan = 15;
         td.className = "muted";
         td.textContent = "目前未發現可用的策略資料（board:*）。";
         tr.appendChild(td);
@@ -1128,6 +1141,12 @@
 
         tr.appendChild(updatedTd);
 
+        /* === 新增 note 欄位渲染 === */
+        const noteText = row.note ?? "-";
+        const noteTd = tdNode(textNode(noteText), "note-cell");
+        noteTd.title = String(noteText || "");
+        tr.appendChild(noteTd);
+
         const tdBtn = document.createElement("td");
         const sKey = seriesKeyByBoard.get(key);
         if (sKey) {
@@ -1147,7 +1166,7 @@
           trChart.className = "chart-row";
           trChart.id = `chartrow-${key.replace(":","-")}`;
           const tdChart = document.createElement("td");
-          tdChart.colSpan = 14;
+          tdChart.colSpan = 15;
 
           const wrap = document.createElement("div");
           wrap.className = "chart-wrap";
@@ -1251,7 +1270,7 @@
         const tr = document.createElement("tr");
         tr.className = "data-row";
         const td = document.createElement("td");
-        td.colSpan = 14;
+        td.colSpan = 15;
         td.className = "muted";
         td.textContent = "目前無法取得資料，請稍後重新整理或檢查網路／權限設定。";
         tr.appendChild(td);
