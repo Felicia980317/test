@@ -219,6 +219,89 @@
       overflow: hidden;
     }
 
+    /* Roadmap / 預計更新 */
+    .roadmap {
+      list-style: none;
+      padding: 0;
+      margin: 6px 0 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .roadmap-item {
+      border: 1px dashed var(--card-border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      background: linear-gradient(180deg, rgba(14,165,233,0.05), transparent 60%);
+    }
+    body.dark .roadmap-item {
+      background: linear-gradient(180deg, rgba(56,189,248,0.08), transparent 60%);
+    }
+    .roadmap-title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .roadmap-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .roadmap-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .roadmap-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      border: 1px solid var(--card-border);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .roadmap-tag.planned {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #93c5fd;
+    }
+    .roadmap-tag.progress {
+      background: #fff7ed;
+      color: #9a3412;
+      border-color: #fdba74;
+    }
+    .roadmap-tag.done {
+      background: #ecfdf3;
+      color: #166534;
+      border-color: #4ade80;
+    }
+    body.dark .roadmap-tag.planned {
+      background: #0b1120;
+      color: #bfdbfe;
+      border-color: #60a5fa;
+    }
+    body.dark .roadmap-tag.progress {
+      background: #3a2a10;
+      color: #fed7aa;
+      border-color: #fb923c;
+    }
+    body.dark .roadmap-tag.done {
+      background: #052e16;
+      color: #bbf7d0;
+      border-color: #22c55e;
+    }
+    .roadmap-eta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
     table {
       border-collapse: collapse;
       width: 100%;
@@ -233,7 +316,7 @@
       z-index: 1;
       background: var(--thead);
       color: var(--muted);
-      font-size: 13px;             /* 表頭字體加大 */
+      font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.05em;
       text-transform: uppercase;
@@ -248,7 +331,6 @@
       font-size: 13px;
     }
 
-    /* 左靠欄位（名稱／策略／標的） */
     tbody td:first-child,
     tbody td:nth-child(2),
     tbody td:nth-child(3) {
@@ -260,7 +342,6 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* 一般列交錯底色 + hover */
     tbody tr.data-row:nth-of-type(odd) td {
       background: var(--row-alt);
     }
@@ -268,7 +349,6 @@
       background: var(--hover);
     }
 
-    /* 不活躍列：整列灰底（展開時用） */
     tbody tr.data-row.row-stale td {
       background: #f3f4f6;
     }
@@ -282,7 +362,6 @@
       background: #020617;
     }
 
-    /* 回測圖表列顯示控制 */
     tr.chart-row { display: none; }
     tr.chart-row.open { display: table-row; }
     tr.chart-row > td {
@@ -355,13 +434,11 @@
       color: #fca5a5;
     }
 
-    /* 更新時間顏色差異（7 天內 / 7 天以上） */
     .updated-active { color: #16a34a; font-weight: 500; }
     .updated-stale  { color: #f97316; }
     body.dark .updated-active { color: #4ade80; }
     body.dark .updated-stale  { color: #fdba74; }
 
-    /* 不活躍標籤 */
     .inactive-pill {
       display: inline-flex;
       align-items: center;
@@ -408,7 +485,7 @@
     <div class="topbar">
       <div class="title">
         策略看板
-        <span class="sub">ETH 量化策略監控</span>
+        <span class="sub" id="boardSubtitle">ETH 量化策略監控</span>
       </div>
       <div class="toolbar">
         <span id="status" class="chip" aria-live="polite">初始化</span>
@@ -417,10 +494,18 @@
       </div>
     </div>
 
-    <div class="card" aria-label="TradingView ETH K線">
+    <div class="card" aria-label="TradingView K線">
       <div class="card-head">
-        <div class="card-title">ETH/USDT K 線（TradingView）</div>
+        <div class="card-title" id="tv_card_title">ETH/USDT K 線（TradingView）</div>
         <div class="toolbar">
+          <label for="tv_symbol">幣種：</label>
+          <select id="tv_symbol" title="選擇幣種">
+            <option value="ETHUSDT">ETH/USDT</option>
+            <option value="BTCUSDT" selected>BTC/USDT</option>
+            <option value="SOLUSDT">SOL/USDT</option>
+            <option value="BNBUSDT">BNB/USDT</option>
+          </select>
+
           <label for="tv_tf">時間週期：</label>
           <select id="tv_tf" title="選擇時間週期">
             <option value="1">1m</option>
@@ -433,6 +518,31 @@
         </div>
       </div>
       <div id="tv_chart"></div>
+    </div>
+
+    <!-- 預計更新：Roadmap -->
+    <div class="card" aria-label="預計更新項目">
+      <div class="card-head">
+        <div class="card-title">預計更新 / Roadmap</div>
+        <div class="toolbar">
+          <span class="muted"> -- </span>
+        </div>
+      </div>
+
+      <ul class="roadmap" id="roadmapList">
+	  
+        <li class="roadmap-item">
+          <div>
+            <div class="roadmap-title">網頁更新</div>
+            <div class="roadmap-desc">簡化算法上傳資料，優化前端網頁顯示項目</div>
+          </div>
+          <div class="roadmap-meta">
+            <span class="roadmap-tag progress">In Progress</span>
+            <span class="roadmap-eta">ETA: 2025/12</span>
+          </div>
+        </li>
+
+      </ul>
     </div>
 
     <div class="card">
@@ -474,6 +584,31 @@
   <script>
     let tvWidget = null;
 
+    // TradingView 多幣種設定
+    const TV_SYMBOLS = {
+      ETHUSDT: { tv: "BINANCE:ETHUSDT", label: "ETH/USDT", sub: "ETH 量化策略監控" },
+      BTCUSDT: { tv: "BINANCE:BTCUSDT", label: "BTC/USDT", sub: "BTC 量化策略監控" },
+      SOLUSDT: { tv: "BINANCE:SOLUSDT", label: "SOL/USDT", sub: "SOL 量化策略監控" },
+      BNBUSDT: { tv: "BINANCE:BNBUSDT", label: "BNB/USDT", sub: "BNB 量化策略監控" }
+    };
+
+    let currentTVKey = (function() {
+      try {
+        const saved = localStorage.getItem("tv_symbol_key");
+        return (saved && TV_SYMBOLS[saved]) ? saved : "ETHUSDT";
+      } catch (_) {
+        return "ETHUSDT";
+      }
+    })();
+
+    function updateTVLabels() {
+      const cfg = TV_SYMBOLS[currentTVKey] || TV_SYMBOLS.ETHUSDT;
+      const titleEl = document.getElementById("tv_card_title");
+      const subEl = document.getElementById("boardSubtitle");
+      if (titleEl) titleEl.textContent = `${cfg.label} K 線（TradingView）`;
+      if (subEl) subEl.textContent = cfg.sub;
+    }
+
     (function setupTheme() {
       const btn = document.getElementById('themeToggle');
       function applyTheme(theme) {
@@ -487,7 +622,6 @@
         const next = document.body.classList.contains('dark') ? 'light' : 'dark';
         applyTheme(next);
       });
-      // 預設深色主題
       applyTheme('dark');
       window.__applyTheme = applyTheme;
     })();
@@ -495,11 +629,14 @@
     function recreateTVWidget() {
       const container = document.getElementById('tv_chart');
       if (!window.TradingView || !container) return;
+
+      const cfg = TV_SYMBOLS[currentTVKey] || TV_SYMBOLS.ETHUSDT;
+
       container.innerHTML = '';
       tvWidget = new TradingView.widget({
         container_id: 'tv_chart',
         autosize: true,
-        symbol: 'BINANCE:ETHUSDT',
+        symbol: cfg.tv,
         interval: document.getElementById('tv_tf')?.value || '15',
         timezone: 'Asia/Taipei',
         locale: 'zh_TW',
@@ -508,7 +645,7 @@
         withdateranges: true,
         hide_top_toolbar: false,
         hide_side_toolbar: false,
-        allow_symbol_change: false,
+        allow_symbol_change: false, // 由我們的下拉控制
         details: true,
         enable_publishing: false
       });
@@ -516,14 +653,31 @@
 
     window.addEventListener('DOMContentLoaded', function () {
       if (!window.TradingView) { console.error('[TradingView] Script 未載入'); return; }
+
+      // 幣種下拉初始化 + 監聽
+      const symSel = document.getElementById('tv_symbol');
+      if (symSel) {
+        symSel.value = currentTVKey;
+        symSel.addEventListener('change', () => {
+          currentTVKey = symSel.value;
+          try { localStorage.setItem("tv_symbol_key", currentTVKey); } catch (_) {}
+          updateTVLabels();
+          recreateTVWidget();
+        });
+      }
+
+      updateTVLabels();
       recreateTVWidget();
+
       const tfSel = document.getElementById('tv_tf');
       tfSel.addEventListener('change', function () {
         const val = tfSel.value;
-        tvWidget && tvWidget.onChartReady(function () {
+        if (!tvWidget) return;
+        tvWidget.onChartReady(function () {
           tvWidget.chart().setResolution(val, function(){});
         });
       });
+
       if (typeof window.__applyTheme === 'function') {
         const current = document.body.classList.contains('dark') ? 'dark' : 'light';
         window.__applyTheme(current);
