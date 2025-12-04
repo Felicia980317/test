@@ -402,7 +402,7 @@
     <div class="topbar">
       <div class="title">
         策略看板
-        <span class="sub">ETH 量化策略監控</span>
+        <span class="sub">BTC 量化策略監控</span>
       </div>
       <div class="toolbar">
         <span id="status" class="chip" aria-live="polite">初始化</span>
@@ -411,11 +411,18 @@
       </div>
     </div>
 
-    <div class="card" aria-label="TradingView ETH K線">
+    <div class="card" aria-label="TradingView BTC K線">
       <div class="card-head">
-        <div class="card-title">ETH/USDT K 線（TradingView）</div>
+        <div class="card-title">BTC/USDT K 線（TradingView）</div>
         <div class="toolbar">
-          <label for="tv_tf">時間週期：</label>
+          <label for="tv_symbol">幣種：</label>
+          <select id="tv_symbol" title="選擇幣種">
+            <option value="BTC" selected>BTC</option>
+            <option value="ETH">ETH</option>
+            <option value="SOL">SOL</option>
+          </select>
+
+          <label for="tv_tf" style="margin-left:8px;">時間週期：</label>
           <select id="tv_tf" title="選擇時間週期">
             <option value="1">1m</option>
             <option value="5">5m</option>
@@ -474,6 +481,35 @@
   <script>
     let tvWidget = null;
 
+    // 取得目前選中的幣種（BTC / ETH / SOL，預設 BTC）
+    function getCurrentAssetBase() {
+      const sel = document.getElementById('tv_symbol');
+      const val = sel && sel.value ? sel.value.toUpperCase() : 'BTC';
+      if (val !== 'BTC' && val !== 'ETH' && val !== 'SOL') return 'BTC';
+      return val;
+    }
+
+    // 根據幣種更新頁面上的文字（副標題、TradingView 卡片標題等）
+    function updateSymbolTexts() {
+      const base = getCurrentAssetBase();
+
+      // 左上角小標
+      const sub = document.querySelector('.title span.sub');
+      if (sub) {
+        sub.textContent = `${base} 量化策略監控`;
+      }
+
+      // TradingView 卡片 aria-label 與標題
+      const tvCard = document.querySelector('.card[aria-label^="TradingView"]');
+      if (tvCard) {
+        tvCard.setAttribute('aria-label', `TradingView ${base} K線`);
+        const titleEl = tvCard.querySelector('.card-title');
+        if (titleEl) {
+          titleEl.textContent = `${base}/USDT K 線（TradingView）`;
+        }
+      }
+    }
+
     (function setupTheme() {
       const btn = document.getElementById('themeToggle');
       function applyTheme(theme) {
@@ -494,11 +530,15 @@
     function recreateTVWidget() {
       const container = document.getElementById('tv_chart');
       if (!window.TradingView || !container) return;
+
+      const base = getCurrentAssetBase();   // BTC / ETH / SOL
+      const symbolCode = `BINANCE:${base}USDT`;
+
       container.innerHTML = '';
       tvWidget = new TradingView.widget({
         container_id: 'tv_chart',
         autosize: true,
-        symbol: 'BINANCE:ETHUSDT',
+        symbol: symbolCode,
         interval: document.getElementById('tv_tf')?.value || '15',
         timezone: 'Asia/Taipei',
         locale: 'zh_TW',
@@ -515,7 +555,9 @@
 
     window.addEventListener('DOMContentLoaded', function () {
       if (!window.TradingView) { console.error('[TradingView] Script 未載入'); return; }
+
       recreateTVWidget();
+
       const tfSel = document.getElementById('tv_tf');
       tfSel.addEventListener('change', function () {
         const val = tfSel.value;
@@ -523,10 +565,26 @@
           tvWidget.chart().setResolution(val, function(){});
         });
       });
+
+      // 幣種切換：重建 TradingView + 更新文字 + 重畫打開中的回測圖
+      const symbolSel = document.getElementById('tv_symbol');
+      if (symbolSel) {
+        symbolSel.addEventListener('change', function () {
+          recreateTVWidget();
+          updateSymbolTexts();
+          if (typeof window.__rerenderOpenCharts === 'function') {
+            window.__rerenderOpenCharts();
+          }
+        });
+      }
+
       if (typeof window.__applyTheme === 'function') {
         const current = document.body.classList.contains('dark') ? 'dark' : 'light';
         window.__applyTheme(current);
       }
+
+      // 初始化文字（依據預設幣種）
+      updateSymbolTexts();
     });
 
     const REST_URL    = "https://guided-spider-19708.upstash.io";
@@ -749,10 +807,25 @@
       if (!Array.isArray(series) || series.length === 0) return;
 
       const sample = series.find(x => x && typeof x === "object") || {};
-      const hasEth = Object.prototype.hasOwnProperty.call(sample, "eth_close");
-      const hasBtc = Object.prototype.hasOwnProperty.call(sample, "btc_close");
-      const priceKey = hasEth ? "eth_close" : (hasBtc ? "btc_close" : null);
-      const assetLabel = priceKey === "btc_close" ? "BTC" : "ETH";
+      const base = getCurrentAssetBase();
+      const keyMap = { BTC: "btc_close", ETH: "eth_close", SOL: "sol_close" };
+      let priceKey = keyMap[base];
+
+      // 如果沒有對應幣種欄位，就退回原本的自動偵測
+      if (!priceKey || !Object.prototype.hasOwnProperty.call(sample, priceKey)) {
+        const hasEth = Object.prototype.hasOwnProperty.call(sample, "eth_close");
+        const hasBtc = Object.prototype.hasOwnProperty.call(sample, "btc_close");
+        const hasSol = Object.prototype.hasOwnProperty.call(sample, "sol_close");
+        if (hasBtc) priceKey = "btc_close";
+        else if (hasEth) priceKey = "eth_close";
+        else if (hasSol) priceKey = "sol_close";
+        else priceKey = null;
+      }
+
+      let assetLabel = "Asset";
+      if (priceKey === "btc_close") assetLabel = "BTC";
+      else if (priceKey === "eth_close") assetLabel = "ETH";
+      else if (priceKey === "sol_close") assetLabel = "SOL";
 
       const labels = series.map(x => String(x.date));
       const equity  = series.map(x => Number(x.equity));
@@ -970,7 +1043,6 @@
         for (let i = subset.length - 1; i >= 0; i--) {
           if (subset[i].t <= targetTs) { base = subset[i]; break; }
         }
-        
         if (!base || base.equity <= 0) {
           return (last.equity / subset[0].equity) - 1;
         }
@@ -1081,8 +1153,8 @@
           nameTd.appendChild(tagSpan);
           nameTd.appendChild(document.createTextNode(" "));
         }
-		
-		nameSpan.textContent = row.name || key;
+
+        nameSpan.textContent = row.name || key;
         nameTd.appendChild(nameSpan);
 
         tr.appendChild(nameTd);
