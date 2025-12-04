@@ -219,89 +219,6 @@
       overflow: hidden;
     }
 
-    /* Roadmap / 預計更新 */
-    .roadmap {
-      list-style: none;
-      padding: 0;
-      margin: 6px 0 0;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 10px;
-    }
-    .roadmap-item {
-      border: 1px dashed var(--card-border);
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      background: linear-gradient(180deg, rgba(14,165,233,0.05), transparent 60%);
-    }
-    body.dark .roadmap-item {
-      background: linear-gradient(180deg, rgba(56,189,248,0.08), transparent 60%);
-    }
-    .roadmap-title {
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-    .roadmap-desc {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-    .roadmap-meta {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
-      white-space: nowrap;
-    }
-    .roadmap-tag {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 9999px;
-      border: 1px solid var(--card-border);
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    .roadmap-tag.planned {
-      background: #eff6ff;
-      color: #1d4ed8;
-      border-color: #93c5fd;
-    }
-    .roadmap-tag.progress {
-      background: #fff7ed;
-      color: #9a3412;
-      border-color: #fdba74;
-    }
-    .roadmap-tag.done {
-      background: #ecfdf3;
-      color: #166534;
-      border-color: #4ade80;
-    }
-    body.dark .roadmap-tag.planned {
-      background: #0b1120;
-      color: #bfdbfe;
-      border-color: #60a5fa;
-    }
-    body.dark .roadmap-tag.progress {
-      background: #3a2a10;
-      color: #fed7aa;
-      border-color: #fb923c;
-    }
-    body.dark .roadmap-tag.done {
-      background: #052e16;
-      color: #bbf7d0;
-      border-color: #22c55e;
-    }
-    .roadmap-eta {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
     table {
       border-collapse: collapse;
       width: 100%;
@@ -335,17 +252,6 @@
     tbody td:nth-child(2),
     tbody td:nth-child(3) {
       text-align: left;
-    }
-
-    /* === 新增：note 顯示樣式 === */
-    th.note-col { width: 100px; }
-    td.note-cell {
-      text-align: left;
-      white-space: pre-wrap;     /* 支援換行 */
-      word-break: break-word;    /* 長字切斷 */
-      line-height: 1.45;
-      font-size: 12px;
-      vertical-align: top;
     }
 
     td.num {
@@ -496,7 +402,7 @@
     <div class="topbar">
       <div class="title">
         策略看板
-        <span class="sub" id="boardSubtitle">ETH 量化策略監控</span>
+        <span class="sub">ETH 量化策略監控</span>
       </div>
       <div class="toolbar">
         <span id="status" class="chip" aria-live="polite">初始化</span>
@@ -505,18 +411,10 @@
       </div>
     </div>
 
-    <div class="card" aria-label="TradingView K線">
+    <div class="card" aria-label="TradingView ETH K線">
       <div class="card-head">
-        <div class="card-title" id="tv_card_title">ETH/USDT K 線（TradingView）</div>
+        <div class="card-title">ETH/USDT K 線（TradingView）</div>
         <div class="toolbar">
-          <label for="tv_symbol">幣種：</label>
-          <select id="tv_symbol" title="選擇幣種">
-            <option value="ETHUSDT">ETH/USDT</option>
-            <option value="BTCUSDT" selected>BTC/USDT</option>
-            <option value="SOLUSDT">SOL/USDT</option>
-            <option value="BNBUSDT">BNB/USDT</option>
-          </select>
-
           <label for="tv_tf">時間週期：</label>
           <select id="tv_tf" title="選擇時間週期">
             <option value="1">1m</option>
@@ -531,36 +429,17 @@
       <div id="tv_chart"></div>
     </div>
 
-    <!-- 預計更新：Roadmap -->
-    <div class="card" aria-label="預計更新項目">
-      <div class="card-head">
-        <div class="card-title">預計更新 / Roadmap</div>
-        <div class="toolbar">
-          <span class="muted"> -- </span>
-        </div>
-      </div>
-
-      <ul class="roadmap" id="roadmapList">
-	  
-        <li class="roadmap-item">
-          <div>
-            <div class="roadmap-title">網頁更新</div>
-            <div class="roadmap-desc">1.簡化算法上傳資料 2.增加多年份回測資訊 3.優化前端網頁顯示項目</div>
-          </div>
-          <div class="roadmap-meta">
-            <span class="roadmap-tag progress">In Progress</span>
-            <span class="roadmap-eta">ETA: 2025/12</span>
-          </div>
-        </li>
-
-      </ul>
-    </div>
-
     <div class="card">
       <div class="card-head">
         <div class="card-title">策略列表</div>
         <div class="toolbar">
           <span class="muted">資料來源：Upstash（自動探索 board:*）</span>
+
+          <label for="yearFilter" class="muted">年度：</label>
+          <select id="yearFilter" title="切換統計年度">
+            <option value="">載入中…</option>
+          </select>
+
           <button id="toggleInactive" class="btn small" type="button" disabled>
             無不活躍策略
           </button>
@@ -582,13 +461,11 @@
             <th>最大回撤</th>
             <th>起始時間</th>
             <th>更新時間</th>
-            <!-- === 新增 note 欄位 === -->
-            <th class="note-col">備註</th>
             <th style="width:110px;">回測圖表</th>
           </tr>
         </thead>
         <tbody id="tb">
-          <tr><td class="muted" colspan="15">資料載入中…</td></tr>
+          <tr><td class="muted" colspan="14">資料載入中…</td></tr>
         </tbody>
       </table>
     </div>
@@ -596,31 +473,6 @@
 
   <script>
     let tvWidget = null;
-
-    // TradingView 多幣種設定
-    const TV_SYMBOLS = {
-      ETHUSDT: { tv: "BINANCE:ETHUSDT", label: "ETH/USDT", sub: "ETH 量化策略監控" },
-      BTCUSDT: { tv: "BINANCE:BTCUSDT", label: "BTC/USDT", sub: "BTC 量化策略監控" },
-      SOLUSDT: { tv: "BINANCE:SOLUSDT", label: "SOL/USDT", sub: "SOL 量化策略監控" },
-      BNBUSDT: { tv: "BINANCE:BNBUSDT", label: "BNB/USDT", sub: "BNB 量化策略監控" }
-    };
-
-    let currentTVKey = (function() {
-      try {
-        const saved = localStorage.getItem("tv_symbol_key");
-        return (saved && TV_SYMBOLS[saved]) ? saved : "ETHUSDT";
-      } catch (_) {
-        return "ETHUSDT";
-      }
-    })();
-
-    function updateTVLabels() {
-      const cfg = TV_SYMBOLS[currentTVKey] || TV_SYMBOLS.ETHUSDT;
-      const titleEl = document.getElementById("tv_card_title");
-      const subEl = document.getElementById("boardSubtitle");
-      if (titleEl) titleEl.textContent = `${cfg.label} K 線（TradingView）`;
-      if (subEl) subEl.textContent = cfg.sub;
-    }
 
     (function setupTheme() {
       const btn = document.getElementById('themeToggle');
@@ -642,14 +494,11 @@
     function recreateTVWidget() {
       const container = document.getElementById('tv_chart');
       if (!window.TradingView || !container) return;
-
-      const cfg = TV_SYMBOLS[currentTVKey] || TV_SYMBOLS.ETHUSDT;
-
       container.innerHTML = '';
       tvWidget = new TradingView.widget({
         container_id: 'tv_chart',
         autosize: true,
-        symbol: cfg.tv,
+        symbol: 'BINANCE:ETHUSDT',
         interval: document.getElementById('tv_tf')?.value || '15',
         timezone: 'Asia/Taipei',
         locale: 'zh_TW',
@@ -658,7 +507,7 @@
         withdateranges: true,
         hide_top_toolbar: false,
         hide_side_toolbar: false,
-        allow_symbol_change: false, // 由我們的下拉控制
+        allow_symbol_change: false,
         details: true,
         enable_publishing: false
       });
@@ -666,31 +515,14 @@
 
     window.addEventListener('DOMContentLoaded', function () {
       if (!window.TradingView) { console.error('[TradingView] Script 未載入'); return; }
-
-      // 幣種下拉初始化 + 監聽
-      const symSel = document.getElementById('tv_symbol');
-      if (symSel) {
-        symSel.value = currentTVKey;
-        symSel.addEventListener('change', () => {
-          currentTVKey = symSel.value;
-          try { localStorage.setItem("tv_symbol_key", currentTVKey); } catch (_) {}
-          updateTVLabels();
-          recreateTVWidget();
-        });
-      }
-
-      updateTVLabels();
       recreateTVWidget();
-
       const tfSel = document.getElementById('tv_tf');
       tfSel.addEventListener('change', function () {
         const val = tfSel.value;
-        if (!tvWidget) return;
-        tvWidget.onChartReady(function () {
+        tvWidget && tvWidget.onChartReady(function () {
           tvWidget.chart().setResolution(val, function(){});
         });
       });
-
       if (typeof window.__applyTheme === 'function') {
         const current = document.body.classList.contains('dark') ? 'dark' : 'light';
         window.__applyTheme(current);
@@ -705,10 +537,20 @@
     const statusEl = document.getElementById("status");
     const lastRefreshEl = document.getElementById("lastRefresh");
     const inactiveToggleBtn = document.getElementById("toggleInactive");
+    const yearFilterSel = document.getElementById("yearFilter");
 
     const chartInstances = new Map();
     const chartSeriesCache = new Map();
+    const normalizedSeriesCache = new Map();
+    const yearsByBoard = new Map();
+    let allYearsSet = new Set();
+
     let showInactive = true;
+    let yearFilterValue = null;
+
+    let latestRowsByKey = null;
+    let latestSeriesKeyByBoard = null;
+    let latestSortedBoardKeys = null;
 
     function setStatus(ok, text) {
       statusEl.className = ok ? "chip ok" : "chip";
@@ -718,7 +560,11 @@
     function fmtPercentNode(x) {
       const span = document.createElement("span");
       const n = Number(x);
-      if (!isFinite(n)) { span.className = "pct"; span.textContent = "-"; return span; }
+      if (!isFinite(n)) {
+        span.className = "pct";
+        span.textContent = "-";
+        return span;
+      }
       const val = n * 100;
       span.textContent = val.toFixed(2) + "%";
       span.className = val > 0 ? "pct pos" : (val < 0 ? "pct neg" : "pct");
@@ -773,10 +619,11 @@
 
     function decodeVenue(venueStr) {
       if (typeof venueStr !== "string" || !venueStr) return { exchange: "-", env: "-" };
-      const [exchange, envRaw] = venueStr.split(".");
-      const env = (envRaw || "mainnet").toLowerCase();
-      const envLabel = env === "testnet" ? "測試網" : "主網";
-      return { exchange: exchange || "-", env: envLabel };
+      const parts = venueStr.split(".");
+      const exchange = parts[0] || "-";
+      const envRaw = parts[1] || "mainnet";
+      const env = envRaw.toLowerCase() === "testnet" ? "測試網" : "主網";
+      return { exchange, env };
     }
 
     function fmtLeverage(val) {
@@ -793,6 +640,7 @@
       if (s === "short") return "Short";
       return dir;
     }
+
     function modeBadge(mode) {
       const m = String(mode || "").toLowerCase();
       const map = {
@@ -1062,13 +910,133 @@
       });
     }
 
+    // 將整條資金曲線整理成「時間排序、含年度」的陣列
+    function buildNormalizedSeries(series) {
+      const arr = [];
+      if (!Array.isArray(series)) return arr;
+      for (const s of series) {
+        if (!s) continue;
+        const d = new Date(s.date);
+        const t = d.getTime();
+        if (!isFinite(t)) continue;
+        const year = d.getFullYear();
+        const eq = Number(s.equity);
+        if (!isFinite(eq)) continue;
+        arr.push({ t, year, equity: eq });
+      }
+      arr.sort((a, b) => a.t - b.t);
+      return arr;
+    }
+
+    // 針對指定年度計算：7d, 30d, 年化, 最大回撤, 總報酬
+    function computeYearStats(normalizedSeries, year) {
+      if (!normalizedSeries || !normalizedSeries.length) return null;
+      const Y = Number(year);
+      if (!isFinite(Y)) return null;
+
+      const subset = normalizedSeries.filter(p => p.year === Y);
+      if (!subset.length) return null;
+
+      const first = subset[0];
+      const last  = subset[subset.length - 1];
+
+      const startEq = first.equity;
+      const endEq   = last.equity;
+      let totalReturn = NaN;
+      if (isFinite(startEq) && startEq > 0 && isFinite(endEq)) {
+        totalReturn = (endEq / startEq) - 1;
+      }
+
+      const msDiff = last.t - first.t;
+      const dayDiff = (msDiff / 86400000) + 1;
+      let annualizedReturn = NaN;
+      if (isFinite(totalReturn) && dayDiff > 0) {
+        annualizedReturn = totalReturn * 365 / dayDiff;
+      }
+
+      let peak = subset[0].equity;
+      let maxDD = 0;
+      for (const p of subset) {
+        if (p.equity > peak) peak = p.equity;
+        if (peak > 0) {
+          const dd = (p.equity / peak) - 1;
+          if (dd < maxDD) maxDD = dd;
+        }
+      }
+
+      function calcLookback(days) {
+        const targetTs = last.t - days * 86400000;
+        let base = null;
+        for (let i = subset.length - 1; i >= 0; i--) {
+          if (subset[i].t <= targetTs) { base = subset[i]; break; }
+        }
+        
+        if (!base || base.equity <= 0) {
+          return (last.equity / subset[0].equity) - 1;
+        }
+        return (last.equity / base.equity) - 1;
+      }
+
+      const r7  = calcLookback(7);
+      const r30 = calcLookback(30);
+
+      return {
+        totalReturn,
+        annualizedReturn: totalReturn < 0 ? totalReturn : annualizedReturn,
+        maxDrawdown: maxDD,
+        return7d: r7,
+        return30d: r30
+      };
+    }
+
+    function rebuildYearFilterOptions(yearsArr) {
+      if (!yearFilterSel) return;
+
+      yearFilterSel.innerHTML = "";
+
+      if (!yearsArr || yearsArr.length === 0) {
+        const op = document.createElement("option");
+        op.value = "";
+        op.textContent = "無資料";
+        yearFilterSel.appendChild(op);
+        yearFilterSel.disabled = true;
+        yearFilterValue = null;
+        return;
+      }
+
+      const sorted = yearsArr.slice().sort((a, b) => b - a);
+
+      sorted.forEach(y => {
+        const op = document.createElement("option");
+        op.value = String(y);
+        op.textContent = String(y);
+        yearFilterSel.appendChild(op);
+      });
+
+      const prev = yearFilterValue ? Number(yearFilterValue) : null;
+      if (!prev || !sorted.includes(prev)) {
+        yearFilterValue = String(sorted[0]); // 預設最新年度
+      }
+      yearFilterSel.value = yearFilterValue;
+      yearFilterSel.disabled = false;
+    }
+
+    if (yearFilterSel) {
+      yearFilterSel.addEventListener("change", () => {
+        yearFilterValue = yearFilterSel.value || null;
+        if (latestRowsByKey && latestSeriesKeyByBoard && latestSortedBoardKeys) {
+          renderTable(latestRowsByKey, latestSeriesKeyByBoard, latestSortedBoardKeys);
+        }
+      });
+    }
+
     function renderTable(rowsByKey, seriesKeyByBoard, sortedBoardKeys) {
       tb.innerHTML = "";
       if (!sortedBoardKeys || sortedBoardKeys.length === 0) {
         const tr = document.createElement("tr");
         tr.className = "data-row";
         const td = document.createElement("td");
-        td.colSpan = 15;
+        td.colSpan = 14;
         td.className = "muted";
         td.textContent = "目前未發現可用的策略資料（board:*）。";
         tr.appendChild(td);
@@ -1078,43 +1046,80 @@
       }
 
       let inactiveCount = 0;
+      const yearNum = yearFilterValue ? Number(yearFilterValue) : null;
 
       for (const key of sortedBoardKeys) {
         const row = rowsByKey.get(key);
         if (!row) continue;
+
+        const sKey = seriesKeyByBoard.get(key);
+        const norm = normalizedSeriesCache.get(key) || [];
+        const yearsSet = yearsByBoard.get(key);
+
+        let yearStats = null;
+
+        if (yearNum !== null) {
+          if (!yearsSet || !yearsSet.has(yearNum)) {
+            continue; // 該策略這個年度沒有任何資料 → 不顯示
+          }
+          yearStats = computeYearStats(norm, yearNum);
+        }
+
         const { exchange } = decodeVenue(row.venue);
 
         const tr = document.createElement("tr");
         tr.className = "data-row";
 
-        tr.appendChild(tdNode(textNode(row.name || key)));
+        const nameTd = document.createElement("td");
+        const nameSpan = document.createElement("span");
+
+        if (yearNum !== null) {
+          const tagSpan = document.createElement("span");
+          tagSpan.className = "badge backtest";
+          tagSpan.style.marginLeft = "6px";
+          tagSpan.textContent = `${yearNum} 統計`;
+          nameTd.appendChild(tagSpan);
+          nameTd.appendChild(document.createTextNode(" "));
+        }
+		
+		nameSpan.textContent = row.name || key;
+        nameTd.appendChild(nameSpan);
+
+        tr.appendChild(nameTd);
+
         tr.appendChild(tdNode(textNode(row.strategy)));
         tr.appendChild(tdNode(textNode(row.symbol)));
         tr.appendChild(tdNode(modeBadge(row.run_mode)));
         tr.appendChild(tdNode(textNode(exchange)));
         tr.appendChild(tdNode(textNode(fmtLeverage(row.leverage)), "num"));
+
         const dirText = fmtDirection(row.direction);
         const dirSpan = document.createElement("span");
         dirSpan.textContent = dirText;
-
         if (dirText === "Long") {
           dirSpan.className = "dir-long";
         } else if (dirText === "Short") {
           dirSpan.className = "dir-short";
         }
-
         tr.appendChild(tdNode(dirSpan));
-        tr.appendChild(tdNode(fmtPercentNode(row.return_7d), "num"));
-        tr.appendChild(tdNode(fmtPercentNode(row.return_30d), "num"));
 
-        const annualTd = tdNode(fmtPercentNode(row.annualized_return), "num");
-        const totalText = fmtPercentText(row.return_total);
+        const r7Val  = yearStats ? yearStats.return7d        : row.return_7d;
+        const r30Val = yearStats ? yearStats.return30d       : row.return_30d;
+        const annVal = yearStats ? yearStats.annualizedReturn: row.annualized_return;
+        const totVal = yearStats ? yearStats.totalReturn     : row.return_total;
+        const ddVal  = yearStats ? yearStats.maxDrawdown     : row.max_drawdown;
+
+        tr.appendChild(tdNode(fmtPercentNode(r7Val), "num"));
+        tr.appendChild(tdNode(fmtPercentNode(r30Val), "num"));
+
+        const annualTd = tdNode(fmtPercentNode(annVal), "num");
+        const totalText = fmtPercentText(totVal);
         annualTd.title = totalText === "-"
           ? "總收益率：資料缺失"
           : `總收益率：${totalText}`;
         tr.appendChild(annualTd);
 
-        tr.appendChild(tdNode(fmtPercentNode(row.max_drawdown), "num"));
+        tr.appendChild(tdNode(fmtPercentNode(ddVal), "num"));
         tr.appendChild(tdNode(textNode(fmtISOToTPEDate(row.started_at))));
 
         const updatedStr = fmtISOToTPE(row.updated_at);
@@ -1141,14 +1146,7 @@
 
         tr.appendChild(updatedTd);
 
-        /* === 新增 note 欄位渲染 === */
-        const noteText = row.note ?? "-";
-        const noteTd = tdNode(textNode(noteText), "note-cell");
-        noteTd.title = String(noteText || "");
-        tr.appendChild(noteTd);
-
         const tdBtn = document.createElement("td");
-        const sKey = seriesKeyByBoard.get(key);
         if (sKey) {
           const btn = document.createElement("button");
           btn.className = "btn small";
@@ -1166,7 +1164,7 @@
           trChart.className = "chart-row";
           trChart.id = `chartrow-${key.replace(":","-")}`;
           const tdChart = document.createElement("td");
-          tdChart.colSpan = 15;
+          tdChart.colSpan = 14;
 
           const wrap = document.createElement("div");
           wrap.className = "chart-wrap";
@@ -1242,6 +1240,11 @@
         const sortedBoardKeys = discovered.map(x => x.key);
 
         const seriesKeyByBoard = new Map();
+        chartSeriesCache.clear();
+        normalizedSeriesCache.clear();
+        yearsByBoard.clear();
+        allYearsSet = new Set();
+
         for (const k of sortedBoardKeys) {
           const row = rowsByKey.get(k);
           if (!row) continue;
@@ -1251,11 +1254,28 @@
             if (available) {
               seriesKeyByBoard.set(k, sKey);
               chartSeriesCache.set(k, data);
+
+              const norm = buildNormalizedSeries(data);
+              normalizedSeriesCache.set(k, norm);
+
+              const yearSet = new Set();
+              for (const p of norm) {
+                yearSet.add(p.year);
+                allYearsSet.add(p.year);
+              }
+              yearsByBoard.set(k, yearSet);
             }
           } catch (e) {
             console.warn("[series 探測失敗：視為無]", k, e);
           }
         }
+
+        const yearArray = Array.from(allYearsSet);
+        rebuildYearFilterOptions(yearArray);
+
+        latestRowsByKey = rowsByKey;
+        latestSeriesKeyByBoard = seriesKeyByBoard;
+        latestSortedBoardKeys = sortedBoardKeys;
 
         renderTable(rowsByKey, seriesKeyByBoard, sortedBoardKeys);
 
@@ -1270,7 +1290,7 @@
         const tr = document.createElement("tr");
         tr.className = "data-row";
         const td = document.createElement("td");
-        td.colSpan = 15;
+        td.colSpan = 14;
         td.className = "muted";
         td.textContent = "目前無法取得資料，請稍後重新整理或檢查網路／權限設定。";
         tr.appendChild(td);
