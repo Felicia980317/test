@@ -8,16 +8,19 @@
   <style>
     :root {
       --maxw: 1600px;
-      --bg: #f3f4f6;
-      --fg: #0f172a;
-      --muted: #6b7280;
-      --card: #ffffff;
-      --card-border: #e5e7eb;
-      --accent: #0ea5e9;
-      --accent-soft: #e0f2fe;
-      --thead: #f9fafb;
-      --row-alt: #f9fafb;
-      --hover: #eff6ff;
+      --panel-h: 420px;
+      --bg: #f6f7fb;
+      --fg: #0b1220;
+      --muted: #64748b;
+      --card: rgba(255, 255, 255, 0.75);
+      --card-solid: #ffffff;
+      --card-border: rgba(148, 163, 184, 0.28);
+      --accent: #2563eb;
+      --accent-2: #06b6d4;
+      --accent-soft: rgba(37, 99, 235, 0.12);
+      --thead: rgba(248, 250, 252, 0.9);
+      --row-alt: rgba(248, 250, 252, 0.7);
+      --hover: rgba(219, 234, 254, 0.6);
       --ok-bg: #ecfdf3;
       --ok-bd: #22c55e;
       --err-bg: #fef2f2;
@@ -27,13 +30,15 @@
       --bg: #020617;
       --fg: #e5e7eb;
       --muted: #94a3b8;
-      --card: #020617;
-      --card-border: #1f2937;
-      --accent: #38bdf8;
-      --accent-soft: #0f172a;
-      --thead: #020617;
-      --row-alt: #020617;
-      --hover: #111827;
+      --card: rgba(2, 6, 23, 0.72);
+      --card-solid: #020617;
+      --card-border: rgba(148, 163, 184, 0.22);
+      --accent: #60a5fa;
+      --accent-2: #22d3ee;
+      --accent-soft: rgba(96, 165, 250, 0.12);
+      --thead: rgba(2, 6, 23, 0.88);
+      --row-alt: rgba(2, 6, 23, 0.55);
+      --hover: rgba(30, 41, 59, 0.6);
     }
 
     html, body { height: 100%; }
@@ -42,19 +47,29 @@
       margin: 0;
       padding: 24px 32px 32px;
       background:
-        radial-gradient(circle at 0% 0%, #e0f2fe 0, #f9fafb 35%, #f3f4f6 100%);
+        radial-gradient(800px 520px at 15% 10%, rgba(37, 99, 235, 0.20), transparent 60%),
+        radial-gradient(700px 520px at 85% 25%, rgba(6, 182, 212, 0.18), transparent 58%),
+        radial-gradient(900px 650px at 35% 95%, rgba(34, 197, 94, 0.12), transparent 55%),
+        linear-gradient(180deg, #f8fafc 0%, var(--bg) 60%);
       color: var(--fg);
       font-family: ui-sans-serif, system-ui, "Segoe UI", -apple-system,
         "Noto Sans TC", "PingFang TC", "Microsoft JhengHei";
     }
     body.dark {
       background:
-        radial-gradient(circle at 0% 0%, #0b1120 0, #020617 45%, #020617 100%);
+        radial-gradient(900px 520px at 15% 10%, rgba(96, 165, 250, 0.18), transparent 62%),
+        radial-gradient(780px 520px at 85% 20%, rgba(34, 211, 238, 0.16), transparent 60%),
+        radial-gradient(1000px 650px at 35% 95%, rgba(34, 197, 94, 0.10), transparent 58%),
+        linear-gradient(180deg, #020617 0%, #020617 100%);
     }
 
     .wrap {
       max-width: var(--maxw);
       margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      body { padding: 18px 14px 22px; }
     }
 
     .topbar {
@@ -63,6 +78,32 @@
       justify-content: space-between;
       gap: 16px;
       margin-bottom: 18px;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.65fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 1100px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .panel-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-wrap {
+      border-radius: 12px;
+      overflow: auto;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.30);
+    }
+    body.dark .table-wrap {
+      background: rgba(2, 6, 23, 0.30);
     }
     .title {
       font-size: 26px;
@@ -96,9 +137,9 @@
     select {
       padding: 8px 12px;
       border-radius: 9999px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      background: #0f172a;
-      color: #f9fafb;
+      border: 1px solid rgba(148, 163, 184, 0.40);
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #f8fafc;
       cursor: pointer;
       font-size: 12px;
       display: inline-flex;
@@ -106,7 +147,7 @@
       gap: 6px;
       line-height: 1.2;
       transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
-      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+      box-shadow: 0 14px 30px rgba(2, 6, 23, 0.18);
     }
     .btn.small {
       font-size: 11px;
@@ -129,7 +170,7 @@
       transform: none;
     }
     select {
-      background: var(--card);
+      background: var(--card-solid);
       color: var(--fg);
       box-shadow: none;
     }
@@ -144,6 +185,7 @@
       font-size: 11px;
       line-height: 1.2;
       background: var(--card);
+      backdrop-filter: blur(10px);
       color: var(--muted);
     }
     #status {
@@ -175,17 +217,18 @@
     }
 
     .card {
-      border-radius: 16px;
+      border-radius: 18px;
       background: var(--card);
-      border: 1px solid rgba(148, 163, 184, 0.25);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(14px);
       box-shadow:
-        0 20px 45px rgba(15, 23, 42, 0.08),
-        0 1px 0 rgba(255, 255, 255, 0.6);
+        0 18px 40px rgba(2, 6, 23, 0.10),
+        0 1px 0 rgba(255, 255, 255, 0.18);
       padding: 16px 18px 18px;
       margin: 12px 0 20px;
     }
     body.dark .card {
-      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.52);
     }
 
     .card-head {
@@ -209,22 +252,239 @@
       width: 6px;
       height: 20px;
       border-radius: 9999px;
-      background: linear-gradient(180deg, #0ea5e9, #22c55e);
+      background: linear-gradient(180deg, var(--accent), #22c55e);
+    }
+
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      height: var(--panel-h);
+      overflow: auto;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.45);
+    }
+    body.dark .log-list {
+      background: rgba(2, 6, 23, 0.45);
+    }
+    .log-item {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 8px 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(255, 255, 255, 0.65);
+    }
+    .log-item:hover {
+      background: var(--hover);
+    }
+    body.dark .log-item {
+      background: rgba(2, 6, 23, 0.65);
+      border-color: rgba(148, 163, 184, 0.20);
+    }
+    @media (max-width: 640px) {
+      .log-item {
+        grid-template-columns: 1fr;
+      }
+    }
+    .log-time {
+      color: var(--muted);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+    .log-msg {
+      text-align: left;
+      font-size: 13px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .log-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 11px;
+      border: 1px solid var(--card-border);
+      background: var(--accent-soft);
+      color: var(--fg);
     }
 
     #tv_chart {
       width: 100%;
-      height: 420px;
+      height: var(--panel-h);
       border-radius: 12px;
       overflow: hidden;
     }
 
     table {
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0 10px;
       width: 100%;
+      min-width: 1100px;
       border-radius: 12px;
       overflow: hidden;
+      background: transparent;
+    }
+
+    /* Strategy list: render as modern cards inside the table */
+    .table-wrap thead {
+      display: none;
+    }
+    .table-wrap tbody tr.data-row td {
+      background: transparent;
+      border: 0;
+      padding: 0;
+    }
+    .table-wrap tbody tr.data-row td:first-child::before {
+      display: none;
+    }
+
+    .strategy-card {
+      border-radius: 18px;
+      border: 1px solid var(--card-border);
       background: var(--card);
+      backdrop-filter: blur(14px);
+      box-shadow:
+        0 18px 40px rgba(2, 6, 23, 0.10),
+        0 1px 0 rgba(255, 255, 255, 0.18);
+      padding: 14px 14px 12px;
+      display: flex;
+      gap: 14px;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.15s ease;
+    }
+    body.dark .strategy-card {
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.52);
+    }
+    .strategy-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    }
+    .strategy-card:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.02);
+      box-shadow:
+        0 22px 52px rgba(2, 6, 23, 0.16),
+        0 1px 0 rgba(255, 255, 255, 0.18);
+    }
+
+    .strategy-main {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding-left: 6px;
+    }
+    .strategy-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .strategy-name {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 520px;
+    }
+    @media (max-width: 900px) {
+      .strategy-name { max-width: 100%; }
+    }
+
+    .strategy-sub {
+      margin-top: 6px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .strategy-updated {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .strategy-updated.updated-active,
+    .strategy-updated.updated-stale {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .strategy-updated.updated-active::before,
+    .strategy-updated.updated-stale::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 9999px;
+      background: currentColor;
+      opacity: 0.9;
+    }
+
+    .kpi-grid {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (max-width: 900px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    .kpi {
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.45);
+      padding: 10px 10px 9px;
+    }
+    body.dark .kpi {
+      background: rgba(2, 6, 23, 0.35);
+    }
+    .kpi-label {
+      font-size: 10px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .kpi-value {
+      font-size: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .strategy-actions {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      padding-top: 2px;
+    }
+
+    .stale .strategy-card {
+      filter: grayscale(0.25);
+      opacity: 0.82;
     }
 
     thead th {
@@ -232,6 +492,7 @@
       top: 0;
       z-index: 1;
       background: var(--thead);
+      backdrop-filter: blur(10px);
       color: var(--muted);
       font-size: 13px;
       font-weight: 600;
@@ -242,10 +503,47 @@
     }
 
     th, td {
-      border: 1px solid var(--card-border);
+      border: 0;
       padding: 9px 10px;
       text-align: center;
       font-size: 13px;
+    }
+
+    tbody tr.data-row td {
+      background: var(--card);
+      border-top: 1px solid var(--card-border);
+      border-bottom: 1px solid var(--card-border);
+    }
+    tbody tr.data-row td:first-child {
+      border-left: 1px solid var(--card-border);
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      padding-left: 16px;
+    }
+    tbody tr.data-row td:last-child {
+      border-right: 1px solid var(--card-border);
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+
+    tbody tr.data-row td:first-child::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    }
+
+    tbody tr.data-row {
+      transition: transform 0.12s ease, filter 0.12s ease;
+    }
+    tbody tr.data-row:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.02);
     }
 
     tbody td:first-child,
@@ -279,6 +577,31 @@
       background: #020617;
     }
 
+    /* Desktop: KPI-style labels inside cells (more dashboard-like) */
+    @media (min-width: 901px) {
+      tbody tr.data-row td:nth-child(n+4):not(:last-child) {
+        position: relative;
+        padding-top: 22px;
+      }
+      tbody tr.data-row td:nth-child(n+4):not(:last-child)::before {
+        content: attr(data-label);
+        position: absolute;
+        top: 6px;
+        left: 10px;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        opacity: 0.9;
+        pointer-events: none;
+      }
+      tbody tr.data-row td.num::before {
+        left: auto;
+        right: 10px;
+        text-align: right;
+      }
+    }
+
     tr.chart-row { display: none; }
     tr.chart-row.open { display: table-row; }
     tr.chart-row > td {
@@ -288,6 +611,69 @@
       border-left: 0;
       border-right: 0;
       padding-top: 6px;
+    }
+
+    /* Mobile: stack each data row like a card */
+    @media (max-width: 900px) {
+      table {
+        min-width: 0;
+        border-spacing: 0 12px;
+      }
+      thead {
+        display: none;
+      }
+      tbody tr.data-row {
+        display: block;
+      }
+      tbody tr.data-row td {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        text-align: right;
+        padding: 10px 12px;
+        border-left: 1px solid var(--card-border);
+        border-right: 1px solid var(--card-border);
+        border-top: 0;
+        border-bottom: 1px solid var(--card-border);
+      }
+      tbody tr.data-row td:first-child {
+        border-top: 1px solid var(--card-border);
+        border-top-left-radius: 14px;
+        border-top-right-radius: 14px;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+      tbody tr.data-row td:last-child {
+        border-bottom-left-radius: 14px;
+        border-bottom-right-radius: 14px;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+      }
+      tbody tr.data-row td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-align: left;
+        flex: 0 0 auto;
+      }
+      tbody tr.data-row td.num {
+        font-variant-numeric: tabular-nums;
+      }
+      tbody tr.data-row td:first-child {
+        text-align: left;
+      }
+      tbody tr.data-row td:first-child::before {
+        content: "名稱";
+      }
+      tr.chart-row.open {
+        display: block;
+      }
+      tr.chart-row > td {
+        display: block;
+      }
     }
 
     .badge {
@@ -396,6 +782,7 @@
 
   <script src="https://s3.tradingview.com/tv.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="./upstash-config.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -411,29 +798,47 @@
       </div>
     </div>
 
-    <div class="card" aria-label="TradingView BTC K線">
-      <div class="card-head">
-        <div class="card-title">BTC/USDT K 線（TradingView）</div>
-        <div class="toolbar">
-          <label for="tv_symbol">幣種：</label>
-          <select id="tv_symbol" title="選擇幣種">
-            <option value="BTC" selected>BTC</option>
-            <option value="ETH">ETH</option>
-            <option value="SOL">SOL</option>
-          </select>
+    <div class="main-grid" aria-label="主儀表板">
+      <div>
+        <div class="card panel-card" aria-label="TradingView BTC K線">
+          <div class="card-head">
+            <div class="card-title">BTC/USDT K 線（TradingView）</div>
+            <div class="toolbar">
+              <label for="tv_symbol">幣種：</label>
+              <select id="tv_symbol" title="選擇幣種">
+                <option value="BTC" selected>BTC</option>
+                <option value="ETH">ETH</option>
+                <option value="SOL">SOL</option>
+              </select>
 
-          <label for="tv_tf" style="margin-left:8px;">時間週期：</label>
-          <select id="tv_tf" title="選擇時間週期">
-            <option value="1">1m</option>
-            <option value="5">5m</option>
-            <option value="15" selected>15m</option>
-            <option value="60">1h</option>
-            <option value="240">4h</option>
-            <option value="D">1d</option>
-          </select>
+              <label for="tv_tf" style="margin-left:8px;">時間週期：</label>
+              <select id="tv_tf" title="選擇時間週期">
+                <option value="1">1m</option>
+                <option value="5">5m</option>
+                <option value="15" selected>15m</option>
+                <option value="60">1h</option>
+                <option value="240">4h</option>
+                <option value="D">1d</option>
+              </select>
+            </div>
+          </div>
+          <div id="tv_chart"></div>
         </div>
       </div>
-      <div id="tv_chart"></div>
+
+      <div>
+        <div class="card panel-card" aria-label="交易訊息">
+          <div class="card-head">
+            <div class="card-title">交易訊息</div>
+            <div class="toolbar">
+              <span id="feedStatus" class="chip">—</span>
+            </div>
+          </div>
+          <div id="feedList" class="log-list" role="log" aria-live="polite">
+            <div class="muted">載入中…</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -452,29 +857,31 @@
           </button>
         </div>
       </div>
-      <table aria-label="策略清單">
-        <thead>
-          <tr>
-            <th style="width:160px;">名稱</th>
-            <th>策略</th>
-            <th>標的</th>
-            <th>運行模式</th>
-            <th>交易所</th>
-            <th>槓桿</th>
-            <th>方向</th>
-            <th>7天收益率</th>
-            <th>30天收益率</th>
-            <th>線性年化報酬率<br>(依據總收益)</th>
-            <th>最大回撤</th>
-            <th>起始時間</th>
-            <th>更新時間</th>
-            <th style="width:110px;">回測圖表</th>
-          </tr>
-        </thead>
-        <tbody id="tb">
-          <tr><td class="muted" colspan="14">資料載入中…</td></tr>
-        </tbody>
-      </table>
+      <div class="table-wrap">
+        <table aria-label="策略清單">
+          <thead>
+            <tr>
+              <th style="width:160px;">名稱</th>
+              <th>策略</th>
+              <th>標的</th>
+              <th>運行模式</th>
+              <th>交易所</th>
+              <th>槓桿</th>
+              <th>方向</th>
+              <th>7天收益率</th>
+              <th>30天收益率</th>
+              <th>線性年化報酬率<br>(依據總收益)</th>
+              <th>最大回撤</th>
+              <th>起始時間</th>
+              <th>更新時間</th>
+              <th style="width:110px;">回測圖表</th>
+            </tr>
+          </thead>
+          <tbody id="tb">
+            <tr><td class="muted" colspan="14">資料載入中…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -587,15 +994,24 @@
       updateSymbolTexts();
     });
 
-    const REST_URL    = "https://guided-spider-19708.upstash.io";
-    const READ_TOKEN  = "Akz8AAIgcDE18SAeYebRfjHOi1t_RtbOFNv2r3NHF0kLYfDIUMnEOw";
-    const INTERVAL_MS = 600000;
+    const REST_URL = window.UPSTASH_REST_URL;
+    const READ_TOKEN = window.UPSTASH_READ_TOKEN;
+    const INTERVAL_MS = window.QRYPTO_PULL_INTERVAL_MS ?? 600000;
+
+    // 交易/進場訊息（從 Upstash 讀取 List：LRANGE）
+    // 建議演算法端用 LPUSH + LTRIM 維持最新 N 筆
+    const FEED_LIST_KEY = window.QRYPTO_FEED_LIST_KEY ?? "log:events";
+    const FEED_LIMIT = window.QRYPTO_FEED_LIMIT ?? 80;
+    const FEED_POLL_MS = window.QRYPTO_FEED_POLL_MS ?? 5000;
 
     const tb = document.getElementById("tb");
     const statusEl = document.getElementById("status");
     const lastRefreshEl = document.getElementById("lastRefresh");
     const inactiveToggleBtn = document.getElementById("toggleInactive");
     const yearFilterSel = document.getElementById("yearFilter");
+
+    const feedListEl = document.getElementById("feedList");
+    const feedStatusEl = document.getElementById("feedStatus");
 
     const chartInstances = new Map();
     const chartSeriesCache = new Map();
@@ -715,14 +1131,18 @@
       return span;
     }
 
-    function tdNode(child, className) {
+    function tdNode(child, className, label) {
       const td = document.createElement("td");
       if (className) td.className = className;
+      if (label) td.setAttribute("data-label", label);
       td.appendChild(child);
       return td;
     }
 
     async function upstashGet(pathWithArgs) {
+      if (!REST_URL || !READ_TOKEN) {
+        throw new Error("Upstash 設定缺失：請確認 upstash-config.js 已載入（UPSTASH_REST_URL / UPSTASH_READ_TOKEN）");
+      }
       const url = `${REST_URL}/${pathWithArgs}`;
       const res = await fetch(url, {
         headers: { "Authorization": `Bearer ${READ_TOKEN}` },
@@ -730,6 +1150,124 @@
       });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       return res.json();
+    }
+
+    async function upstashLRange(key, start, stop) {
+      const j = await upstashGet(
+        `lrange/${encodeURIComponent(key)}/${start}/${stop}`
+      );
+      if (!j || !Array.isArray(j.result)) {
+        throw new Error("LRANGE 回傳格式異常");
+      }
+      return j.result;
+    }
+
+    function safeParseJSON(s) {
+      if (typeof s !== "string") return null;
+      try {
+        return JSON.parse(s);
+      } catch {
+        return null;
+      }
+    }
+
+    function fmtFeedTime(x) {
+      if (typeof x === "number" && isFinite(x)) {
+        return new Date(x).toLocaleString("zh-TW", { hour12: false });
+      }
+      if (typeof x === "string" && x) {
+        return fmtISOToTPE(x);
+      }
+      return "-";
+    }
+
+    function setFeedStatus(ok, text) {
+      if (!feedStatusEl) return;
+      feedStatusEl.className = ok ? "chip ok" : "chip";
+      feedStatusEl.textContent = text;
+    }
+
+    function renderFeedItems(items) {
+      if (!feedListEl) return;
+      feedListEl.innerHTML = "";
+
+      if (!items || items.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "目前沒有訊息";
+        feedListEl.appendChild(empty);
+        return;
+      }
+
+      for (const it of items) {
+        const wrap = document.createElement("div");
+        wrap.className = "log-item";
+
+        const t = document.createElement("div");
+        t.className = "log-time";
+
+        const msg = document.createElement("div");
+        msg.className = "log-msg";
+
+        const tags = document.createElement("div");
+        tags.className = "log-tags";
+
+        const obj = (typeof it === "object" && it) ? it : { msg: String(it) };
+        const when = obj.ts ?? obj.time ?? obj.at;
+        t.textContent = fmtFeedTime(when);
+
+        const main = obj.msg ?? obj.message ?? obj.event ?? "(no message)";
+        msg.textContent = String(main);
+
+        const tagPairs = [
+          ["strategy", obj.strategy],
+          ["symbol", obj.symbol],
+          ["side", obj.side],
+          ["price", obj.price],
+          ["qty", obj.qty],
+          ["level", obj.level]
+        ];
+        for (const [k, v] of tagPairs) {
+          if (v === null || v === undefined || v === "") continue;
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = `${k}: ${v}`;
+          tags.appendChild(tag);
+        }
+
+        wrap.appendChild(t);
+        const right = document.createElement("div");
+        right.appendChild(msg);
+        if (tags.childNodes.length) right.appendChild(tags);
+        wrap.appendChild(right);
+
+        feedListEl.appendChild(wrap);
+      }
+    }
+
+    async function pullFeed() {
+      try {
+        setFeedStatus(false, "訊息同步中…");
+
+        const raw = await upstashLRange(FEED_LIST_KEY, 0, FEED_LIMIT - 1);
+        const parsed = raw.map(s => {
+          const obj = safeParseJSON(s);
+          return obj ?? s;
+        });
+
+        renderFeedItems(parsed);
+        setFeedStatus(true, `訊息 ${parsed.length}`);
+      } catch (e) {
+        console.warn("[feed 讀取失敗]", e);
+        if (feedListEl) {
+          feedListEl.innerHTML = "";
+          const div = document.createElement("div");
+          div.className = "muted";
+          div.textContent = "訊息讀取失敗（請檢查 Upstash / 權限 / 網路）";
+          feedListEl.appendChild(div);
+        }
+        setFeedStatus(false, "訊息失敗");
+      }
     }
 
     async function scanBoardKeys(match = "board:*", pageCount = 200) {
@@ -1137,43 +1675,88 @@
           yearStats = computeYearStats(norm, yearNum);
         }
 
-        const { exchange } = decodeVenue(row.venue);
+        const { exchange, env } = decodeVenue(row.venue);
 
         const tr = document.createElement("tr");
         tr.className = "data-row";
 
-        const nameTd = document.createElement("td");
-        const nameSpan = document.createElement("span");
+        const recent = isRecentUpdate(row.updated_at);
+        if (!recent) {
+          tr.classList.add("row-stale", "stale");
+          inactiveCount++;
+        }
+
+        const td = document.createElement("td");
+        td.colSpan = 14;
+
+        const card = document.createElement("div");
+        card.className = "strategy-card";
+
+        const main = document.createElement("div");
+        main.className = "strategy-main";
+
+        const head = document.createElement("div");
+        head.className = "strategy-head";
+
+        const name = document.createElement("div");
+        name.className = "strategy-name";
+        name.textContent = row.name || key;
+        head.appendChild(name);
 
         if (yearNum !== null) {
-          const tagSpan = document.createElement("span");
-          tagSpan.className = "badge backtest";
-          tagSpan.style.marginLeft = "6px";
-          tagSpan.textContent = `${yearNum} 統計`;
-          nameTd.appendChild(tagSpan);
-          nameTd.appendChild(document.createTextNode(" "));
+          const y = document.createElement("span");
+          y.className = "badge backtest";
+          y.textContent = `${yearNum} 統計`;
+          head.appendChild(y);
         }
 
-        nameSpan.textContent = row.name || key;
-        nameTd.appendChild(nameSpan);
-
-        tr.appendChild(nameTd);
-
-        tr.appendChild(tdNode(textNode(row.strategy)));
-        tr.appendChild(tdNode(textNode(row.symbol)));
-        tr.appendChild(tdNode(modeBadge(row.run_mode)));
-        tr.appendChild(tdNode(textNode(exchange)));
-        tr.appendChild(tdNode(textNode(fmtLeverage(row.leverage)), "num"));
+        head.appendChild(modeBadge(row.run_mode));
 
         const dirText = fmtDirection(row.direction);
-        const dirSpan = document.createElement("span");
-        dirSpan.textContent = dirText;
-        if (dirText === "Long") {
-          dirSpan.className = "dir-long";
-        } else if (dirText === "Short") {
-          dirSpan.className = "dir-short";
+        if (dirText && dirText !== "-") {
+          const dir = document.createElement("span");
+          dir.textContent = dirText;
+          dir.className = dirText === "Long" ? "tag dir-long" : (dirText === "Short" ? "tag dir-short" : "tag");
+          head.appendChild(dir);
         }
-        tr.appendChild(tdNode(dirSpan));
+
+        main.appendChild(head);
+
+        const sub = document.createElement("div");
+        sub.className = "strategy-sub";
+
+        const updatedStr = fmtISOToTPE(row.updated_at);
+        const updated = document.createElement("span");
+        updated.className = "strategy-updated " + (recent ? "updated-active" : "updated-stale");
+        updated.textContent = `更新：${updatedStr}`;
+        updated.title = recent
+          ? "最近 7 天內有更新（視為活躍策略）"
+          : "已超過 7 天未更新（視為不活躍策略）";
+        sub.appendChild(updated);
+
+        if (!recent) {
+          const pill = document.createElement("span");
+          pill.className = "inactive-pill";
+          pill.textContent = "不活躍";
+          sub.appendChild(pill);
+        }
+
+        const chips = [
+          ["策略", row.strategy],
+          ["標的", row.symbol],
+          ["交易所", exchange],
+          ["環境", env],
+          ["槓桿", fmtLeverage(row.leverage)],
+          ["起始", fmtISOToTPEDate(row.started_at)],
+        ];
+        for (const [k, v] of chips) {
+          if (v === null || v === undefined || v === "" || v === "-") continue;
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = `${k}: ${v}`;
+          sub.appendChild(tag);
+        }
+        main.appendChild(sub);
 
         const r7Val  = yearStats ? yearStats.return7d        : row.return_7d;
         const r30Val = yearStats ? yearStats.return30d       : row.return_30d;
@@ -1181,54 +1764,54 @@
         const totVal = yearStats ? yearStats.totalReturn     : row.return_total;
         const ddVal  = yearStats ? yearStats.maxDrawdown     : row.max_drawdown;
 
-        tr.appendChild(tdNode(fmtPercentNode(r7Val), "num"));
-        tr.appendChild(tdNode(fmtPercentNode(r30Val), "num"));
+        const grid = document.createElement("div");
+        grid.className = "kpi-grid";
 
-        const annualTd = tdNode(fmtPercentNode(annVal), "num");
-        const totalText = fmtPercentText(totVal);
-        annualTd.title = totalText === "-"
-          ? "總收益率：資料缺失"
-          : `總收益率：${totalText}`;
-        tr.appendChild(annualTd);
-
-        tr.appendChild(tdNode(fmtPercentNode(ddVal), "num"));
-        tr.appendChild(tdNode(textNode(fmtISOToTPEDate(row.started_at))));
-
-        const updatedStr = fmtISOToTPE(row.updated_at);
-        const updatedSpan = document.createElement("span");
-        updatedSpan.textContent = updatedStr;
-        const recent = isRecentUpdate(row.updated_at);
-        updatedSpan.className = recent ? "updated-active" : "updated-stale";
-        updatedSpan.title = recent
-          ? "最近 7 天內有更新（視為活躍策略）"
-          : "已超過 7 天未更新（視為不活躍策略）";
-
-        const updatedTd = document.createElement("td");
-        updatedTd.appendChild(updatedSpan);
-
-        if (!recent) {
-          const pill = document.createElement("span");
-          pill.className = "inactive-pill";
-          pill.textContent = "不活躍";
-          updatedTd.appendChild(document.createTextNode(" "));
-          updatedTd.appendChild(pill);
-          tr.classList.add("row-stale");
-          inactiveCount++;
+        function kpi(label, valueNode, title) {
+          const box = document.createElement("div");
+          box.className = "kpi";
+          if (title) box.title = title;
+          const l = document.createElement("div");
+          l.className = "kpi-label";
+          l.textContent = label;
+          const v = document.createElement("div");
+          v.className = "kpi-value";
+          v.appendChild(valueNode);
+          box.appendChild(l);
+          box.appendChild(v);
+          return box;
         }
 
-        tr.appendChild(updatedTd);
+        const totalText = fmtPercentText(totVal);
+        grid.appendChild(kpi("總收益", fmtPercentNode(totVal), "從起始資金到目前的總收益率"));
+        grid.appendChild(kpi("30天", fmtPercentNode(r30Val), "最近 30 天的收益率"));
 
-        const tdBtn = document.createElement("td");
+        const annTitle = totalText === "-"
+          ? "年化(線性)：資料不足（會以總收益率替代顯示）"
+          : `年化(線性)：依據總收益率 ${totalText}`;
+        grid.appendChild(kpi("年化(線性)", fmtPercentNode(annVal), annTitle));
+        grid.appendChild(kpi("最大回撤", fmtPercentNode(ddVal), "回測/序列期間的最大回撤"));
+        main.appendChild(grid);
+
+        const actions = document.createElement("div");
+        actions.className = "strategy-actions";
         if (sKey) {
           const btn = document.createElement("button");
           btn.className = "btn small";
           btn.textContent = "查看曲線";
           btn.addEventListener("click", () => toggleChartRow(key));
-          tdBtn.appendChild(btn);
+          actions.appendChild(btn);
         } else {
-          tdBtn.appendChild(textNode("—"));
+          const no = document.createElement("span");
+          no.className = "muted";
+          no.textContent = "無曲線資料";
+          actions.appendChild(no);
         }
-        tr.appendChild(tdBtn);
+
+        card.appendChild(main);
+        card.appendChild(actions);
+        td.appendChild(card);
+        tr.appendChild(td);
         tb.appendChild(tr);
 
         if (sKey) {
@@ -1373,6 +1956,10 @@
 
     pullAll();
     setInterval(pullAll, INTERVAL_MS);
+
+    // 訊息面板輪詢（獨立於策略清單刷新）
+    pullFeed();
+    setInterval(pullFeed, FEED_POLL_MS);
   </script>
 </body>
 </html>
